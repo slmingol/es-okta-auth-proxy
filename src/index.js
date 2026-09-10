@@ -1,9 +1,15 @@
 import 'dotenv/config';
 import express from 'express';
 import session from 'express-session';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import { initOkta, authRouter, requireAuth } from './auth.js';
 import { esProxy } from './proxy.js';
 import { mockEsRouter } from './mock-es.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const dashboardHtml = readFileSync(join(__dirname, 'dashboard.html'));
 
 const app = express();
 const PORT = process.env.PORT || 3333;
@@ -19,8 +25,14 @@ app.use(session({
 // Auth routes (no auth required)
 authRouter(app);
 
-// Root health check
+// Dashboard UI
 app.get('/', (req, res) => {
+  res.setHeader('Content-Type', 'text/html');
+  res.send(dashboardHtml);
+});
+
+// JSON status endpoint
+app.get('/status', (req, res) => {
   res.json({
     status: 'ok',
     user: req.session?.user ?? null,

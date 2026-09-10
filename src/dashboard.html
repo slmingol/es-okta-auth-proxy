@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ES Auth Proxy</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --border: #2a2d3a;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --accent: #6366f1;
+    --green: #22c55e;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+  }
+  body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; padding: 2rem; }
+  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+  h1 { font-size: 1.25rem; font-weight: 600; letter-spacing: -0.01em; }
+  .user-badge { background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 0.3rem 0.9rem; font-size: 0.8rem; color: var(--muted); display: flex; align-items: center; gap: 0.5rem; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+  .dot.anon { background: var(--red); }
+  .section { margin-bottom: 1.75rem; }
+  .section-title { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.75rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.75rem; }
+  a.card {
+    display: block; text-decoration: none;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 1rem 1.1rem; transition: border-color 0.15s, background 0.15s;
+  }
+  a.card:hover { border-color: var(--accent); background: #1e2132; }
+  .card-label { font-size: 0.78rem; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; }
+  .card-path { font-size: 0.72rem; color: var(--muted); font-family: monospace; }
+  a.card.danger { border-color: #3a1f1f; }
+  a.card.danger:hover { border-color: var(--red); background: #1e1212; }
+  a.card.danger .card-label { color: var(--red); }
+  #response { margin-top: 2rem; }
+  #response-title { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+  pre {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 1rem; font-size: 0.75rem; overflow-x: auto; line-height: 1.6;
+    color: #a5f3a5; white-space: pre-wrap; word-break: break-word;
+  }
+  .spinner { display: none; color: var(--muted); font-size: 0.8rem; margin-top: 0.5rem; }
+</style>
+</head>
+<body>
+<header>
+  <h1>ES Auth Proxy &mdash; POC</h1>
+  <div class="user-badge" id="user-badge">
+    <span class="dot anon" id="status-dot"></span>
+    <span id="user-label">loading...</span>
+  </div>
+</header>
+
+<div class="section">
+  <div class="section-title">Cluster</div>
+  <div class="grid">
+    <a class="card" href="#" data-path="/_cluster/health">
+      <div class="card-label">Cluster Health</div>
+      <div class="card-path">/_cluster/health</div>
+    </a>
+    <a class="card" href="#" data-path="/_cluster/stats">
+      <div class="card-label">Cluster Stats</div>
+      <div class="card-path">/_cluster/stats</div>
+    </a>
+    <a class="card" href="#" data-path="/_cat/indices?v&format=json">
+      <div class="card-label">Indices</div>
+      <div class="card-path">/_cat/indices</div>
+    </a>
+    <a class="card" href="#" data-path="/_cat/nodes?v&format=json">
+      <div class="card-label">Nodes</div>
+      <div class="card-path">/_cat/nodes</div>
+    </a>
+    <a class="card" href="#" data-path="/_cat/shards?format=json">
+      <div class="card-label">Shards</div>
+      <div class="card-path">/_cat/shards</div>
+    </a>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Search</div>
+  <div class="grid">
+    <a class="card" href="#" data-path="/_search?size=3">
+      <div class="card-label">Global Search (3)</div>
+      <div class="card-path">/_search?size=3</div>
+    </a>
+    <a class="card" href="#" data-path="/_aliases">
+      <div class="card-label">Aliases</div>
+      <div class="card-path">/_aliases</div>
+    </a>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Auth</div>
+  <div class="grid">
+    <a class="card" href="#" data-path="/auth/me">
+      <div class="card-label">My Identity</div>
+      <div class="card-path">/auth/me</div>
+    </a>
+    <a class="card" href="/auth/login">
+      <div class="card-label">Login</div>
+      <div class="card-path">/auth/login</div>
+    </a>
+    <a class="card danger" href="/auth/logout">
+      <div class="card-label">Logout</div>
+      <div class="card-path">/auth/logout</div>
+    </a>
+  </div>
+</div>
+
+<div id="response" hidden>
+  <div id="response-title">Response</div>
+  <div class="spinner" id="spinner">fetching...</div>
+  <pre id="response-body"></pre>
+</div>
+
+<script>
+  async function loadUser() {
+    try {
+      const r = await fetch('/status');
+      const d = await r.json();
+      const dot = document.getElementById('status-dot');
+      const label = document.getElementById('user-label');
+      if (d.user) {
+        dot.classList.remove('anon');
+        label.textContent = d.user.email || d.user.sub;
+      } else {
+        dot.classList.add('anon');
+        label.textContent = 'not logged in';
+      }
+    } catch {}
+  }
+
+  document.querySelectorAll('[data-path]').forEach(el => {
+    el.addEventListener('click', async e => {
+      e.preventDefault();
+      const path = el.dataset.path;
+      const responseEl = document.getElementById('response');
+      const bodyEl = document.getElementById('response-body');
+      const spinner = document.getElementById('spinner');
+      document.getElementById('response-title').textContent = `Response — ${path}`;
+      responseEl.hidden = false;
+      spinner.style.display = 'block';
+      bodyEl.textContent = '';
+      try {
+        const r = await fetch(path);
+        const text = await r.text();
+        try { bodyEl.textContent = JSON.stringify(JSON.parse(text), null, 2); }
+        catch { bodyEl.textContent = text; }
+      } catch (err) {
+        bodyEl.textContent = `Error: ${err.message}`;
+      }
+      spinner.style.display = 'none';
+    });
+  });
+
+  loadUser();
+</script>
+</body>
+</html>
