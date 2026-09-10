@@ -66,14 +66,7 @@ export function authRouter(app) {
   });
 
   app.get('/auth/logout', (req, res) => {
-    const idToken = req.session.idToken;
-    const port = process.env.PORT || 3344;
-    req.session.destroy();
-    const logoutUrl = new URL(`https://${process.env.OKTA_DOMAIN}/oauth2/default/v1/logout`);
-    logoutUrl.searchParams.set('client_id', process.env.OKTA_CLIENT_ID);
-    logoutUrl.searchParams.set('post_logout_redirect_uri', `http://localhost:${port}`);
-    if (idToken) logoutUrl.searchParams.set('id_token_hint', idToken);
-    res.redirect(logoutUrl.toString());
+    req.session.destroy(() => res.redirect('/'));
   });
 
   app.get('/auth/me', requireAuth, (req, res) => {
