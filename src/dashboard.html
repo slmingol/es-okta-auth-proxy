@@ -6,23 +6,75 @@
 <title>ES Auth Proxy</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* Light mode (default) */
   :root {
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --muted: #94a3b8;
+    --accent: #6366f1;
+    --accent-hover: #f0f0ff;
+    --card-hover: #f8f8ff;
+    --green: #16a34a;
+    --red: #dc2626;
+    --pre-bg: #f1f5f9;
+    --pre-text: #166534;
+    --danger-border: #fee2e2;
+    --danger-hover-bg: #fff5f5;
+  }
+
+  /* Dark mode */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --border: #2a2d3a;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --accent-hover: #1e2132;
+      --card-hover: #1e2132;
+      --green: #22c55e;
+      --red: #ef4444;
+      --pre-bg: #1a1d27;
+      --pre-text: #a5f3a5;
+      --danger-border: #3a1f1f;
+      --danger-hover-bg: #1e1212;
+    }
+  }
+  :root[data-theme="dark"] {
     --bg: #0f1117;
     --surface: #1a1d27;
     --border: #2a2d3a;
     --text: #e2e8f0;
     --muted: #64748b;
-    --accent: #6366f1;
+    --accent-hover: #1e2132;
+    --card-hover: #1e2132;
     --green: #22c55e;
     --red: #ef4444;
-    --yellow: #f59e0b;
+    --pre-bg: #1a1d27;
+    --pre-text: #a5f3a5;
+    --danger-border: #3a1f1f;
+    --danger-hover-bg: #1e1212;
   }
+
   body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; padding: 2rem; }
   header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
   h1 { font-size: 1.25rem; font-weight: 600; letter-spacing: -0.01em; }
+  .header-right { display: flex; align-items: center; gap: 0.6rem; }
   .user-badge { background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 0.3rem 0.9rem; font-size: 0.8rem; color: var(--muted); display: flex; align-items: center; gap: 0.5rem; }
-  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
   .dot.anon { background: var(--red); }
+
+  /* Theme toggle */
+  #theme-toggle {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 999px;
+    padding: 0.3rem 0.75rem; font-size: 0.8rem; color: var(--muted);
+    cursor: pointer; transition: border-color 0.15s;
+  }
+  #theme-toggle:hover { border-color: var(--accent); color: var(--text); }
+
   .section { margin-bottom: 1.75rem; }
   .section-title { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.75rem; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.75rem; }
@@ -31,18 +83,18 @@
     background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
     padding: 1rem 1.1rem; transition: border-color 0.15s, background 0.15s;
   }
-  a.card:hover { border-color: var(--accent); background: #1e2132; }
+  a.card:hover { border-color: var(--accent); background: var(--card-hover); }
   .card-label { font-size: 0.78rem; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; }
   .card-path { font-size: 0.72rem; color: var(--muted); font-family: monospace; }
-  a.card.danger { border-color: #3a1f1f; }
-  a.card.danger:hover { border-color: var(--red); background: #1e1212; }
+  a.card.danger { border-color: var(--danger-border); }
+  a.card.danger:hover { border-color: var(--red); background: var(--danger-hover-bg); }
   a.card.danger .card-label { color: var(--red); }
   #response { margin-top: 2rem; }
   #response-title { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
   pre {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    background: var(--pre-bg); border: 1px solid var(--border); border-radius: 10px;
     padding: 1rem; font-size: 0.75rem; overflow-x: auto; line-height: 1.6;
-    color: #a5f3a5; white-space: pre-wrap; word-break: break-word;
+    color: var(--pre-text); white-space: pre-wrap; word-break: break-word;
   }
   .spinner { display: none; color: var(--muted); font-size: 0.8rem; margin-top: 0.5rem; }
 </style>
@@ -50,9 +102,12 @@
 <body>
 <header>
   <h1>ES Auth Proxy &mdash; POC</h1>
-  <div class="user-badge" id="user-badge">
-    <span class="dot anon" id="status-dot"></span>
-    <span id="user-label">loading...</span>
+  <div class="header-right">
+    <button id="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <div class="user-badge" id="user-badge">
+      <span class="dot anon" id="status-dot"></span>
+      <span id="user-label">loading...</span>
+    </div>
   </div>
 </header>
 
@@ -159,6 +214,21 @@
       spinner.style.display = 'none';
     });
   });
+
+  // Theme toggle
+  const root = document.documentElement;
+  const btn = document.getElementById('theme-toggle');
+  const stored = localStorage.getItem('theme');
+  if (stored) { root.dataset.theme = stored; btn.textContent = stored === 'dark' ? '☀️' : '🌙'; }
+
+  function toggleTheme() {
+    const isDark = root.dataset.theme === 'dark' ||
+      (!root.dataset.theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    const next = isDark ? 'light' : 'dark';
+    root.dataset.theme = next;
+    btn.textContent = next === 'dark' ? '☀️' : '🌙';
+    localStorage.setItem('theme', next);
+  }
 
   loadUser();
 </script>
