@@ -6,56 +6,93 @@ GREEN  := \033[32m
 YELLOW := \033[33m
 RED    := \033[31m
 GRAY   := \033[90m
+MAGENTA := \033[35m
 
 IMAGE  := es-okta-auth-proxy
 PORT   := 3000
 
+# ── Runtime detection (override: RUNTIME=podman make up) ──────────────────────
+ifeq ($(RUNTIME),)
+  ifneq ($(shell command -v docker 2>/dev/null),)
+    RUNTIME := docker
+  else ifneq ($(shell command -v podman 2>/dev/null),)
+    RUNTIME := podman
+  else
+    $(error No container runtime found. Install docker or podman.)
+  endif
+endif
+
+# ── Compose detection (override: COMPOSE="podman-compose" make up) ────────────
+ifeq ($(COMPOSE),)
+  ifeq ($(RUNTIME),podman)
+    ifneq ($(shell command -v podman-compose 2>/dev/null),)
+      COMPOSE := podman-compose
+    else
+      COMPOSE := podman compose
+    endif
+  else
+    ifneq ($(shell docker compose version 2>/dev/null),)
+      COMPOSE := docker compose
+    else ifneq ($(shell command -v docker-compose 2>/dev/null),)
+      COMPOSE := docker-compose
+    else
+      $(error No compose tool found. Install docker compose plugin or podman-compose.)
+    endif
+  endif
+endif
+
 .DEFAULT_GOAL := help
 
-.PHONY: help build up down logs shell clean restart status
+.PHONY: help build up down logs shell clean restart status env-check
 
 help: ## Show this help
 	@echo ""
 	@echo "  $(BOLD)$(CYAN)es-okta-auth-proxy$(RESET)"
 	@echo "  $(GRAY)Okta OIDC → Elasticsearch auth proxy$(RESET)"
 	@echo ""
+	@echo "  $(GRAY)runtime:$(RESET) $(MAGENTA)$(RUNTIME)$(RESET)   $(GRAY)compose:$(RESET) $(MAGENTA)$(COMPOSE)$(RESET)"
+	@echo ""
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*##/ { printf "  $(CYAN)%-12s$(RESET) %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 	@echo ""
+	@echo "  $(GRAY)Override runtime:  RUNTIME=podman make up$(RESET)"
+	@echo "  $(GRAY)Override compose:  COMPOSE=podman-compose make up$(RESET)"
+	@echo ""
 
-build: ## Build the Docker image
-	@echo "$(BOLD)$(CYAN)» Building image...$(RESET)"
-	@docker compose build
+build: ## Build the container image
+	@echo "$(BOLD)$(CYAN)» Building image [$(RUNTIME)]...$(RESET)"
+	@$(COMPOSE) build
 	@echo "$(GREEN)✓ Build complete$(RESET)"
 
 up: ## Start the proxy (detached)
-	@echo "$(BOLD)$(CYAN)» Starting proxy on :$(PORT)...$(RESET)"
-	@docker compose up -d
+	@echo "$(BOLD)$(CYAN)» Starting proxy on :$(PORT) [$(COMPOSE)]...$(RESET)"
+	@$(COMPOSE) up -d
 	@echo "$(GREEN)✓ Running → http://localhost:$(PORT)$(RESET)"
 
 down: ## Stop and remove containers
 	@echo "$(BOLD)$(YELLOW)» Stopping proxy...$(RESET)"
-	@docker compose down
+	@$(COMPOSE) down
 	@echo "$(GREEN)✓ Stopped$(RESET)"
 
 restart: down up ## Restart the proxy
 
 logs: ## Tail proxy logs
-	@docker compose logs -f --tail=50
+	@$(COMPOSE) logs -f --tail=50
 
 shell: ## Open a shell in the running container
-	@docker compose exec proxy sh
+	@$(RUNTIME) exec -it $$($(COMPOSE) ps -q proxy) sh
 
 status: ## Show container status
 	@echo ""
-	@docker compose ps
+	@$(COMPOSE) ps
 	@echo ""
 
 clean: ## Remove containers, image, and volumes
 	@echo "$(BOLD)$(RED)» Removing containers and image...$(RESET)"
-	@docker compose down --rmi local --volumes --remove-orphans
+	@$(COMPOSE) down --rmi local --volumes --remove-orphans 2>/dev/null || \
+	  $(COMPOSE) down --rmi all --volumes 2>/dev/null || true
 	@echo "$(GREEN)✓ Clean$(RESET)"
 
-env-check: ## Validate required env vars are set
+env-check: ## Validate required env vars are set in .env
 	@echo "$(BOLD)$(CYAN)» Checking environment...$(RESET)"
 	@missing=0; \
 	for var in OKTA_DOMAIN OKTA_CLIENT_ID OKTA_CLIENT_SECRET OKTA_REDIRECT_URI ES_URL ES_API_KEY SESSION_SECRET; do \
