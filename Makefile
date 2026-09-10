@@ -43,7 +43,14 @@ endif
 
 .DEFAULT_GOAL := help
 
-.PHONY: help build up down logs shell clean restart status env-check
+.PHONY: help build up down logs shell clean restart status env-check env-init
+
+# Auto-create .env from env.example if missing
+.env:
+	@echo "$(YELLOW)» .env not found — copying from env.example$(RESET)"
+	@cp env.example .env
+	@echo "$(RED)  Edit .env before continuing$(RESET)"
+	@exit 1
 
 help: ## Show this help
 	@echo ""
@@ -63,7 +70,9 @@ build: ## Build the container image
 	@$(COMPOSE) build
 	@echo "$(GREEN)✓ Build complete$(RESET)"
 
-up: ## Start the proxy (detached)
+env-init: .env ## Create .env from env.example (noop if exists)
+
+up: .env ## Start the proxy (detached)
 	@echo "$(BOLD)$(CYAN)» Starting proxy on :$(PORT) [$(COMPOSE)]...$(RESET)"
 	@$(COMPOSE) up -d
 	@echo "$(GREEN)✓ Running → http://localhost:$(PORT)$(RESET)"
