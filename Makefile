@@ -9,7 +9,7 @@ GRAY   := \033[90m
 MAGENTA := \033[35m
 
 IMAGE  := es-okta-auth-proxy
-PORT   := 3000
+PORT   := 3333
 
 # ── Runtime detection (override: RUNTIME=podman make up) ──────────────────────
 ifeq ($(RUNTIME),)
