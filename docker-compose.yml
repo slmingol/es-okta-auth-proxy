@@ -2,7 +2,7 @@ services:
   proxy:
     build: .
     ports:
-      - "3000:3000"
+      - "3333:3333"
     env_file:
       - .env
     restart: unless-stopped
