@@ -476,9 +476,24 @@
     font-family: 'IBM Plex Mono', monospace;
     display: flex;
     justify-content: space-between;
+    align-items: center;
     flex-wrap: wrap;
     gap: 8px;
   }
+
+  #theme-toggle {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 13px;
+    color: var(--text-3);
+    cursor: pointer;
+    transition: border-color 0.15s;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  #theme-toggle:hover { border-color: var(--accent); color: var(--text); }
 
   ul { margin: 12px 0; padding-left: 20px; color: var(--text-2); }
   ul li { margin-bottom: 6px; font-size: 14px; }
@@ -757,9 +772,25 @@ curl http://localhost:3344/status</code></pre>
   <footer class="doc-footer">
     <span>es-okta-auth-proxy</span>
     <span>ECK basic license · Node 18 · openid-client 5</span>
+    <button id="theme-toggle" onclick="toggleTheme()">🌙</button>
   </footer>
 
 </div>
 
+<script>
+  const root = document.documentElement;
+  const btn = document.getElementById('theme-toggle');
+  const stored = localStorage.getItem('theme');
+  if (stored) { root.dataset.theme = stored; btn.textContent = stored === 'dark' ? '☀️' : '🌙'; }
+
+  function toggleTheme() {
+    const isDark = root.dataset.theme === 'dark' ||
+      (!root.dataset.theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    const next = isDark ? 'light' : 'dark';
+    root.dataset.theme = next;
+    btn.textContent = next === 'dark' ? '☀️' : '🌙';
+    localStorage.setItem('theme', next);
+  }
+</script>
 </body>
 </html>
