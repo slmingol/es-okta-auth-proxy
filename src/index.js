@@ -7,6 +7,7 @@ import { dirname, join } from 'path';
 import { initOkta, authRouter, requireAuth } from './auth.js';
 import { esProxy } from './proxy.js';
 import { mockEsRouter } from './mock-es.js';
+import { loadGroupMap } from './group-map.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const dashboardHtml = readFileSync(join(__dirname, 'dashboard.html'));
@@ -51,6 +52,7 @@ if (MOCK_MODE) {
 }
 
 app.listen(PORT, async () => {
+  loadGroupMap();
   await initOkta();
   console.log(`es-okta-auth-proxy listening on http://localhost:${PORT}`);
   console.log(`ES mode: ${MOCK_MODE ? 'MOCK' : process.env.ES_URL}`);

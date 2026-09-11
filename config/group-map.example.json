@@ -1,0 +1,9 @@
+{
+  "_comment": "Maps Okta group names to ES API keys (base64 encoded id:api_key). First matching group wins. '_default' used when no group matches.",
+  "_priority": ["es-admin", "es-metrics-write", "es-metrics-read", "es-readonly"],
+  "es-admin": "BASE64_APIKEY_FOR_ES_ADMIN",
+  "es-metrics-write": "BASE64_APIKEY_FOR_METRICS_WRITE",
+  "es-metrics-read": "BASE64_APIKEY_FOR_METRICS_READ",
+  "es-readonly": "BASE64_APIKEY_FOR_READONLY",
+  "_default": "BASE64_APIKEY_FALLBACK"
+}
