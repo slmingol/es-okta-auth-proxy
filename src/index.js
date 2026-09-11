@@ -11,6 +11,8 @@ import { loadGroupMap } from './group-map.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const dashboardHtml = readFileSync(join(__dirname, 'dashboard.html'));
+const architectureHtml = readFileSync(join(__dirname, '..', 'docs', 'architecture.html'));
+const readmeHtml = readFileSync(join(__dirname, '..', 'README.html'));
 
 const app = express();
 const PORT = process.env.PORT || 3333;
@@ -30,6 +32,18 @@ authRouter(app);
 app.get('/', (req, res) => {
   res.setHeader('Content-Type', 'text/html');
   res.send(dashboardHtml);
+});
+
+// README / docs
+app.get('/docs', (req, res) => {
+  res.setHeader('Content-Type', 'text/html');
+  res.send(readmeHtml);
+});
+
+// Architecture doc
+app.get('/docs/architecture', (req, res) => {
+  res.setHeader('Content-Type', 'text/html');
+  res.send(architectureHtml);
 });
 
 // JSON status endpoint
