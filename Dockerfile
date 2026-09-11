@@ -8,6 +8,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY src ./src
 COPY docs ./docs
+COPY README.html ./
 COPY package.json ./
 EXPOSE 3344
 USER node
