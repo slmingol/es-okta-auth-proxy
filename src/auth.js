@@ -34,7 +34,7 @@ export function authRouter(app) {
     req.session.oidcNonce = nonce;
 
     const url = oidcClient.authorizationUrl({
-      scope: 'openid email profile groups',
+      scope: 'openid email profile',
       state,
       nonce,
     });
