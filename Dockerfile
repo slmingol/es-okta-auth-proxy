@@ -11,4 +11,4 @@ COPY docs ./docs
 COPY package.json ./
 EXPOSE 3344
 USER node
-CMD ["node", "src/index.js"]
+CMD ["node", "--no-deprecation", "src/index.js"]
