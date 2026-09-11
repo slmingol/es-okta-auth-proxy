@@ -1,0 +1,765 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>es-okta-auth-proxy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --bg: #F8FAFD;
+    --surface: #EFF3FB;
+    --surface-2: #E4EBF5;
+    --border: #D0DAEA;
+    --border-faint: #E4EBF5;
+    --text: #0D1829;
+    --text-2: #3D5070;
+    --text-3: #6B82A8;
+    --accent: #0A8A7C;
+    --accent-bg: #E6F5F3;
+    --accent-dim: #0D7068;
+    --code-bg: #111E33;
+    --code-text: #C2D4EF;
+    --code-comment: #5A7AA8;
+    --code-key: #7EC8E3;
+    --code-val: #A3E4A0;
+    --warn-bg: #FFF7E6;
+    --warn-border: #E8C060;
+    --warn-text: #7A4A00;
+    --tag-bg: #E6F5F3;
+    --tag-text: #0A6E62;
+    --flow-bg: #F0F5FC;
+    --flow-border: #C8D8EE;
+    --flow-node: #FFFFFF;
+    --flow-node-border: #B0C4E0;
+    --flow-arrow: #6B82A8;
+    --flow-accent-node: #0A8A7C;
+    --flow-accent-text: #FFFFFF;
+    --step-num: #C8D8EE;
+    --step-num-text: #3D5070;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0C1524;
+      --surface: #162035;
+      --surface-2: #1C2A44;
+      --border: #1E3050;
+      --border-faint: #162540;
+      --text: #D8E6F8;
+      --text-2: #8AAAD0;
+      --text-3: #4A6A98;
+      --accent: #2BBFAD;
+      --accent-bg: #0A2030;
+      --accent-dim: #24A898;
+      --code-bg: #080F1C;
+      --code-text: #C2D4EF;
+      --code-comment: #3D5880;
+      --code-key: #7EC8E3;
+      --code-val: #88D088;
+      --warn-bg: #1A1200;
+      --warn-border: #7A5A00;
+      --warn-text: #E8C060;
+      --tag-bg: #0A2030;
+      --tag-text: #2BBFAD;
+      --flow-bg: #111D30;
+      --flow-border: #1E3050;
+      --flow-node: #162035;
+      --flow-node-border: #2A4068;
+      --flow-arrow: #4A6A98;
+      --flow-accent-node: #1A7A70;
+      --flow-accent-text: #D8F5F2;
+      --step-num: #1E3050;
+      --step-num-text: #4A6A98;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0C1524;
+    --surface: #162035;
+    --surface-2: #1C2A44;
+    --border: #1E3050;
+    --border-faint: #162540;
+    --text: #D8E6F8;
+    --text-2: #8AAAD0;
+    --text-3: #4A6A98;
+    --accent: #2BBFAD;
+    --accent-bg: #0A2030;
+    --accent-dim: #24A898;
+    --code-bg: #080F1C;
+    --code-text: #C2D4EF;
+    --code-comment: #3D5880;
+    --code-key: #7EC8E3;
+    --code-val: #88D088;
+    --warn-bg: #1A1200;
+    --warn-border: #7A5A00;
+    --warn-text: #E8C060;
+    --tag-bg: #0A2030;
+    --tag-text: #2BBFAD;
+    --flow-bg: #111D30;
+    --flow-border: #1E3050;
+    --flow-node: #162035;
+    --flow-node-border: #2A4068;
+    --flow-arrow: #4A6A98;
+    --flow-accent-node: #1A7A70;
+    --flow-accent-text: #D8F5F2;
+    --step-num: #1E3050;
+    --step-num-text: #4A6A98;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    padding-inline: 24px;
+    padding-block: 48px;
+  }
+
+  .wrap { max-width: 780px; margin: 0 auto; }
+
+  .doc-header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 32px;
+    margin-bottom: 48px;
+  }
+
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 12px;
+  }
+
+  h1 {
+    font-size: clamp(22px, 4vw, 30px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin: 0 0 14px;
+    text-wrap: balance;
+  }
+
+  .lead {
+    font-size: 16px;
+    color: var(--text-2);
+    margin: 0 0 20px;
+    max-width: 640px;
+  }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 3px;
+    background: var(--tag-bg);
+    color: var(--tag-text);
+    letter-spacing: 0.04em;
+  }
+
+  section { margin-bottom: 52px; }
+
+  h2 {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0 0 20px;
+    text-wrap: balance;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  h2::before {
+    content: attr(data-n);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--step-num-text);
+    background: var(--step-num);
+    padding: 2px 7px;
+    border-radius: 3px;
+    letter-spacing: 0.06em;
+    flex-shrink: 0;
+  }
+
+  h3 {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-2);
+    font-family: 'IBM Plex Mono', monospace;
+    margin: 28px 0 12px;
+  }
+
+  p { margin: 0 0 14px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .flow {
+    background: var(--flow-bg);
+    border: 1px solid var(--flow-border);
+    border-radius: 8px;
+    padding: 28px 24px;
+    margin: 24px 0;
+    overflow-x: auto;
+  }
+
+  .flow-diagram {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    min-width: 560px;
+    justify-content: center;
+  }
+
+  .flow-node {
+    background: var(--flow-node);
+    border: 1.5px solid var(--flow-node-border);
+    border-radius: 6px;
+    padding: 10px 16px;
+    text-align: center;
+    min-width: 110px;
+  }
+
+  .flow-node.accent {
+    background: var(--flow-accent-node);
+    border-color: var(--flow-accent-node);
+  }
+
+  .flow-node .node-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .flow-node.accent .node-title { color: var(--flow-accent-text); }
+
+  .flow-node .node-sub { font-size: 11px; color: var(--text-3); display: block; }
+  .flow-node.accent .node-sub { color: var(--flow-accent-text); opacity: 0.75; }
+
+  .flow-arrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 0 8px;
+    flex-shrink: 0;
+  }
+
+  .flow-arrow-line {
+    width: 40px;
+    height: 1.5px;
+    background: var(--flow-arrow);
+    position: relative;
+  }
+
+  .flow-arrow-line::after {
+    content: '';
+    position: absolute;
+    right: -1px;
+    top: -3.5px;
+    border-left: 8px solid var(--flow-arrow);
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+  }
+
+  .flow-arrow-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-3);
+    white-space: nowrap;
+    letter-spacing: 0.03em;
+  }
+
+  .auth-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 24px 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .auth-step {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 14px;
+    align-items: start;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-faint);
+  }
+
+  .auth-step:last-child { border-bottom: none; }
+  .auth-step:nth-child(odd) { background: var(--surface); }
+
+  .step-n {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-3);
+    padding-top: 1px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .step-body { font-size: 14px; color: var(--text); line-height: 1.6; }
+  .step-body strong { font-weight: 600; color: var(--text); }
+  .step-body code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    background: var(--surface-2);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--accent);
+  }
+
+  pre {
+    background: var(--code-bg);
+    border-radius: 6px;
+    padding: 18px 20px;
+    overflow-x: auto;
+    margin: 16px 0;
+    border: 1px solid transparent;
+  }
+
+  pre code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--code-text);
+    background: none;
+    padding: 0;
+    border-radius: 0;
+  }
+
+  .tok-key { color: var(--code-key); }
+  .tok-val { color: var(--code-val); }
+  .tok-comment { color: var(--code-comment); }
+  .tok-str { color: #F4C48A; }
+  .tok-num { color: #B8A8E8; }
+  .tok-kw { color: #E88080; }
+
+  p code, li code, td code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    background: var(--surface-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--accent);
+  }
+
+  .table-wrap { overflow-x: auto; margin: 16px 0; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+
+  th {
+    text-align: left;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    padding: 8px 14px;
+    border-bottom: 1.5px solid var(--border);
+  }
+
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-faint);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--surface); }
+  td:first-child { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: var(--accent); }
+
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-bg);
+    padding: 14px 18px;
+    border-radius: 0 6px 6px 0;
+    margin: 20px 0;
+    font-size: 14px;
+    color: var(--text-2);
+  }
+
+  .callout strong { color: var(--text); }
+
+  .warn {
+    border-left: 3px solid var(--warn-border);
+    background: var(--warn-bg);
+    padding: 14px 18px;
+    border-radius: 0 6px 6px 0;
+    margin: 20px 0;
+    font-size: 14px;
+    color: var(--warn-text);
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 20px 0;
+  }
+
+  @media (max-width: 540px) { .two-col { grid-template-columns: 1fr; } }
+
+  .mini-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 18px;
+  }
+
+  .mini-card .mc-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 6px;
+  }
+
+  .mini-card p { font-size: 13.5px; color: var(--text-2); margin: 0; }
+
+  .next-steps { display: flex; flex-direction: column; gap: 12px; margin: 20px 0; }
+
+  .next-step {
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    gap: 14px;
+    align-items: start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+  }
+
+  .ns-icon {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent);
+    padding-top: 1px;
+  }
+
+  .ns-body { font-size: 14px; line-height: 1.55; }
+  .ns-body strong { font-weight: 600; color: var(--text); display: block; margin-bottom: 3px; }
+  .ns-body span { color: var(--text-2); }
+
+  .doc-footer {
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+    font-size: 13px;
+    color: var(--text-3);
+    font-family: 'IBM Plex Mono', monospace;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  ul { margin: 12px 0; padding-left: 20px; color: var(--text-2); }
+  ul li { margin-bottom: 6px; font-size: 14px; }
+  h4 { font-size: 14px; font-weight: 600; margin: 20px 0 8px; color: var(--text); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="doc-header">
+    <p class="eyebrow">Bandwidth Infrastructure</p>
+    <h1>es-okta-auth-proxy</h1>
+    <p class="lead">An authentication proxy that gates Elasticsearch access behind Okta SSO -- translating OIDC identity into ES API key credentials without requiring a paid Elastic license.</p>
+    <div class="tags">
+      <span class="tag">Node 18+</span>
+      <span class="tag">ECK / Basic License</span>
+      <span class="tag">Okta OIDC</span>
+      <span class="tag">ES API Keys</span>
+      <span class="tag">Docker</span>
+    </div>
+  </header>
+
+  <section>
+    <h2 data-n="01">Why this exists</h2>
+    <p>Elasticsearch's native SSO support (SAML, OIDC, LDAP) requires a Gold or Platinum license. Clusters provisioned by the ECK operator on a basic/free license have no way to front-end ES with Okta authentication out of the box.</p>
+    <p>This proxy fills that gap. It sits between clients and Elasticsearch, enforces Okta login, and injects a pre-issued ES API key on every proxied request. From Elasticsearch's perspective, every request arrives authenticated -- it never touches the user's identity directly.</p>
+    <div class="callout">
+      <strong>Analogy to the existing Kibana pattern.</strong> Your current logs/metrics stack has all users land in Kibana via a single <code>ipausers</code> LDAP group -- Kibana holds its own service-account key and ES never sees individual users. This proxy is the same architecture for direct ES access: one Okta-gated entry point, one (or a few) API keys carrying the permissions.
+    </div>
+  </section>
+
+  <section>
+    <h2 data-n="02">How it works</h2>
+    <p>The proxy is a Node/Express app that combines an OIDC client (openid-client) with http-proxy-middleware. Two things happen on every request: authentication is checked, and if valid, the Authorization header is replaced with a pre-issued ES API key before the request is forwarded.</p>
+
+    <div class="flow">
+      <div class="flow-diagram">
+        <div class="flow-node">
+          <span class="node-title">Browser</span>
+          <span class="node-sub">User / client</span>
+        </div>
+        <div class="flow-arrow">
+          <div class="flow-arrow-line"></div>
+          <span class="flow-arrow-label">OIDC login</span>
+        </div>
+        <div class="flow-node accent">
+          <span class="node-title">auth-proxy</span>
+          <span class="node-sub">:3344</span>
+        </div>
+        <div class="flow-arrow">
+          <div class="flow-arrow-line"></div>
+          <span class="flow-arrow-label">ApiKey injected</span>
+        </div>
+        <div class="flow-node">
+          <span class="node-title">Elasticsearch</span>
+          <span class="node-sub">ECK / :9200</span>
+        </div>
+        <div class="flow-arrow">
+          <div class="flow-arrow-line" style="transform: scaleX(-1); margin-left: -1px;"></div>
+          <span class="flow-arrow-label">&nbsp;</span>
+        </div>
+        <div class="flow-node">
+          <span class="node-title">Okta</span>
+          <span class="node-sub">OIDC / groups</span>
+        </div>
+      </div>
+    </div>
+
+    <h3>Request lifecycle</h3>
+    <div class="auth-flow">
+      <div class="auth-step">
+        <span class="step-n">1</span>
+        <div class="step-body"><strong>Unauthenticated request hits proxy.</strong> <code>requireAuth</code> middleware checks <code>req.session.user</code>. If absent, stores the original URL in <code>session.returnTo</code> and redirects to <code>/auth/login</code>.</div>
+      </div>
+      <div class="auth-step">
+        <span class="step-n">2</span>
+        <div class="step-body"><strong>Okta OIDC login.</strong> Proxy generates <code>state</code> + <code>nonce</code>, redirects to Okta authorization URL with scopes <code>openid email profile groups</code>.</div>
+      </div>
+      <div class="auth-step">
+        <span class="step-n">3</span>
+        <div class="step-body"><strong>Callback.</strong> Okta posts tokens to <code>/auth/callback</code>. Proxy validates state/nonce, extracts claims -- <code>sub</code>, <code>email</code>, <code>name</code>, <code>groups[]</code> -- and writes them to the session.</div>
+      </div>
+      <div class="auth-step">
+        <span class="step-n">4</span>
+        <div class="step-body"><strong>API key resolution.</strong> On every proxied request, <code>resolveApiKey(groups)</code> picks the correct ES API key. With no group map loaded, it falls back to <code>ES_API_KEY</code> -- a single key used for all authenticated users.</div>
+      </div>
+      <div class="auth-step">
+        <span class="step-n">5</span>
+        <div class="step-body"><strong>Header swap.</strong> The proxy strips any incoming <code>Authorization</code> header and sets <code>Authorization: ApiKey &lt;key&gt;</code> plus <code>X-Forwarded-User</code> and <code>X-Forwarded-Groups</code> for downstream observability.</div>
+      </div>
+      <div class="auth-step">
+        <span class="step-n">6</span>
+        <div class="step-body"><strong>Response passes through.</strong> ES processes the request under the API key's permissions and returns results directly to the client.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 data-n="03">Current configuration: single-key mode</h2>
+    <p>The simplest deployment mirrors the <code>ipausers</code> Kibana pattern: every authenticated Okta user shares one ES API key. No group mapping file is needed.</p>
+
+    <h3>Environment variables</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Variable</th><th>Purpose</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td>OKTA_DOMAIN</td><td>Your Okta org hostname</td><td><code>corp.okta.com</code></td></tr>
+          <tr><td>OKTA_CLIENT_ID</td><td>OIDC app client ID</td><td><code>0oa1abc...</code></td></tr>
+          <tr><td>OKTA_CLIENT_SECRET</td><td>OIDC app client secret</td><td>--</td></tr>
+          <tr><td>OKTA_REDIRECT_URI</td><td>Must match Okta app config</td><td><code>http://host:3344/auth/callback</code></td></tr>
+          <tr><td>ES_URL</td><td>Elasticsearch endpoint</td><td><code>https://es.internal:9200</code></td></tr>
+          <tr><td>ES_API_KEY</td><td>Base64 encoded <code>id:api_key</code> fallback</td><td><code>aWQ6a2V5...</code></td></tr>
+          <tr><td>SESSION_SECRET</td><td>Express session signing key</td><td>random 32+ char string</td></tr>
+          <tr><td>PORT</td><td>Proxy listen port (default 3344)</td><td><code>3344</code></td></tr>
+          <tr><td>GROUP_MAP_PATH</td><td>Optional path to group-map.json</td><td><code>./config/group-map.json</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Creating the ES API key</h3>
+    <pre><code><span class="tok-comment"># POST to ES as the elastic superuser</span>
+<span class="tok-kw">POST</span> /_security/api_key
+{
+  <span class="tok-key">"name"</span>: <span class="tok-str">"es-okta-proxy-default"</span>,
+  <span class="tok-key">"role_descriptors"</span>: {
+    <span class="tok-key">"proxy-access"</span>: {
+      <span class="tok-key">"indices"</span>: [{
+        <span class="tok-key">"names"</span>: [<span class="tok-str">"logs-*"</span>, <span class="tok-str">"metrics-*"</span>],
+        <span class="tok-key">"privileges"</span>: [<span class="tok-str">"read"</span>, <span class="tok-str">"view_index_metadata"</span>]
+      }],
+      <span class="tok-key">"cluster"</span>: [<span class="tok-str">"monitor"</span>]
+    }
+  },
+  <span class="tok-key">"expiration"</span>: <span class="tok-str">"365d"</span>
+}
+
+<span class="tok-comment"># Response gives id + api_key -- encode as id:api_key base64</span>
+<span class="tok-kw">echo</span> -n <span class="tok-str">"&lt;id&gt;:&lt;api_key&gt;"</span> | base64
+<span class="tok-comment"># paste this value into ES_API_KEY</span></code></pre>
+
+    <h3>Run with Docker</h3>
+    <pre><code><span class="tok-comment"># Copy env template, fill in values</span>
+cp env.example .env
+
+<span class="tok-comment"># Start proxy</span>
+docker compose up -d
+
+<span class="tok-comment"># Verify</span>
+curl http://localhost:3344/status</code></pre>
+
+    <h3>Available routes</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Route</th><th>Auth required</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td>GET /</td><td>No</td><td>Dashboard UI -- shows session state, ES connection</td></tr>
+          <tr><td>GET /status</td><td>No</td><td>JSON health check -- user, ES URL, mock flag</td></tr>
+          <tr><td>GET /auth/login</td><td>--</td><td>Initiates Okta OIDC flow</td></tr>
+          <tr><td>GET /auth/callback</td><td>--</td><td>Okta redirect target; writes session</td></tr>
+          <tr><td>GET /auth/me</td><td>Yes</td><td>Returns current session user + groups as JSON</td></tr>
+          <tr><td>GET /auth/logout</td><td>--</td><td>Destroys local session only</td></tr>
+          <tr><td>GET /auth/revoke</td><td>--</td><td>Revokes access token + kills Okta SSO session globally</td></tr>
+          <tr><td>/_*</td><td>Yes</td><td>All ES API paths -- proxied with API key injected</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2 data-n="04">Optional: group-based key mapping</h2>
+    <p>When different Okta groups need different ES access levels, a JSON config file maps group names to separate API keys. If the file doesn't exist, the proxy silently falls back to <code>ES_API_KEY</code> -- no restart required to add mapping later.</p>
+
+    <h3>config/group-map.json</h3>
+    <pre><code>{
+  <span class="tok-comment">// Priority order -- first matching group wins</span>
+  <span class="tok-key">"_priority"</span>: [<span class="tok-str">"es-admin"</span>, <span class="tok-str">"es-write"</span>, <span class="tok-str">"es-readonly"</span>],
+
+  <span class="tok-key">"es-admin"</span>:    <span class="tok-str">"BASE64_KEY_WITH_SUPERUSER_PERMS"</span>,
+  <span class="tok-key">"es-write"</span>:    <span class="tok-str">"BASE64_KEY_WITH_WRITE_PERMS"</span>,
+  <span class="tok-key">"es-readonly"</span>: <span class="tok-str">"BASE64_KEY_WITH_READ_PERMS"</span>,
+
+  <span class="tok-comment">// Fallback when no group matches</span>
+  <span class="tok-key">"_default"</span>: <span class="tok-str">"BASE64_KEY_FALLBACK"</span>
+}</code></pre>
+
+    <p>The <code>_priority</code> array controls tie-breaking for users in multiple groups. A user in both <code>es-admin</code> and <code>es-readonly</code> gets the <code>es-admin</code> key because it appears first.</p>
+
+    <div class="callout">
+      <strong>Mount as a Kubernetes secret.</strong> In production, don't commit the real group-map.json. Create a K8s Secret, mount it at <code>/app/config/group-map.json</code>, and point <code>GROUP_MAP_PATH</code> at it. The docker-compose already mounts <code>./config</code> read-only; the same pattern works for K8s volumes.
+    </div>
+
+    <h3>Resolution logic (src/group-map.js)</h3>
+    <pre><code><span class="tok-comment">// No map loaded -- single-key mode</span>
+<span class="tok-kw">if</span> (!groupMap) <span class="tok-kw">return</span> process.env.ES_API_KEY;
+
+<span class="tok-comment">// Walk priority list, return first matching group's key</span>
+<span class="tok-kw">for</span> (<span class="tok-kw">const</span> g <span class="tok-kw">of</span> priority) {
+  <span class="tok-kw">if</span> (groups.includes(g) &amp;&amp; groupMap[g]) <span class="tok-kw">return</span> groupMap[g];
+}
+
+<span class="tok-comment">// _default in map -- ES_API_KEY env var</span>
+<span class="tok-kw">return</span> groupMap._default ?? process.env.ES_API_KEY;</code></pre>
+  </section>
+
+  <section>
+    <h2 data-n="05">What Elasticsearch sees</h2>
+    <p>On basic license, ES has no awareness of the user's Okta identity. It only sees the API key. The proxy forwards two informational headers that downstream systems or custom ES plugins can log, but ES itself does not enforce them.</p>
+
+    <div class="two-col">
+      <div class="mini-card">
+        <div class="mc-label">X-Forwarded-User</div>
+        <p>The authenticated user's Okta email. Present on every proxied request when a session exists.</p>
+      </div>
+      <div class="mini-card">
+        <div class="mc-label">X-Forwarded-Groups</div>
+        <p>Comma-separated list of Okta groups from the ID token claims. Useful for audit log parsing.</p>
+      </div>
+    </div>
+
+    <div class="warn">
+      <strong>No per-user audit trail in ES.</strong> All members of a group are indistinguishable at the Elasticsearch layer -- they share one API key. Application-level audit trails require reading the proxy's own logs or adding a logging middleware layer. Per-user ES audit logging requires Gold+.
+    </div>
+  </section>
+
+  <section>
+    <h2 data-n="06">Expanding RBAC: next steps</h2>
+    <p>The architecture supports a graduated rollout. Start with single-key mode; add tiers only when a concrete requirement surfaces.</p>
+
+    <div class="next-steps">
+      <div class="next-step">
+        <span class="ns-icon">01</span>
+        <div class="ns-body">
+          <strong>Define ES roles with role_descriptors</strong>
+          <span>For each access tier you need, create a separate ES API key scoped to the right indices and privileges. Document the role boundary: which indices, which operations (<code>read</code> / <code>write</code> / <code>manage</code>), and whether field-level security (FLS) or document-level security (DLS) is needed -- both available on basic license.</span>
+        </div>
+      </div>
+      <div class="next-step">
+        <span class="ns-icon">02</span>
+        <div class="ns-body">
+          <strong>Mirror groups in Okta</strong>
+          <span>Create Okta groups that match the tier names (e.g. <code>es-admin</code>, <code>es-metrics-write</code>, <code>es-readonly</code>). Assign users. The proxy's OIDC scope already requests the <code>groups</code> claim -- no code changes needed, only Okta configuration.</span>
+        </div>
+      </div>
+      <div class="next-step">
+        <span class="ns-icon">03</span>
+        <div class="ns-body">
+          <strong>Populate group-map.json</strong>
+          <span>Add an entry per group pointing to the base64-encoded API key. Set <code>_priority</code> to the order that breaks ties -- most privileged first. Store the file as a Kubernetes Secret or in Vault, mounted at <code>GROUP_MAP_PATH</code>.</span>
+        </div>
+      </div>
+      <div class="next-step">
+        <span class="ns-icon">04</span>
+        <div class="ns-body">
+          <strong>Automate key rotation</strong>
+          <span>ES API keys support an <code>expiration</code> field. Set a rotation schedule (e.g. 90 days), script the key re-creation via the ES API, and update the K8s Secret. A rolling reload -- SIGHUP or container restart -- picks up the new map without downtime.</span>
+        </div>
+      </div>
+      <div class="next-step">
+        <span class="ns-icon">05</span>
+        <div class="ns-body">
+          <strong>Add proxy-layer audit logging</strong>
+          <span>Since ES can't audit by user on basic license, add request logging middleware in the proxy: timestamp, <code>X-Forwarded-User</code>, method, path, response status. Ship to your existing log aggregation stack. This reconstructs per-user access history without an ES license upgrade.</span>
+        </div>
+      </div>
+      <div class="next-step">
+        <span class="ns-icon">06</span>
+        <div class="ns-body">
+          <strong>Upgrade path: native OIDC (Gold+)</strong>
+          <span>If a license upgrade becomes available, ES native OIDC eliminates the proxy entirely -- users authenticate directly and ES enforces role mappings from the token. The Okta group structure you build now maps directly to ES role mappings, so the operational model carries forward.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <span>es-okta-auth-proxy</span>
+    <span>ECK basic license · Node 18 · openid-client 5</span>
+  </footer>
+
+</div>
+
+</body>
+</html>
