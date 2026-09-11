@@ -482,6 +482,9 @@
   }
 
   #theme-toggle {
+    position: fixed;
+    top: 16px;
+    right: 16px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 999px;
@@ -491,6 +494,7 @@
     cursor: pointer;
     transition: border-color 0.15s;
     font-family: 'IBM Plex Mono', monospace;
+    z-index: 100;
   }
 
   #theme-toggle:hover { border-color: var(--accent); color: var(--text); }
@@ -772,8 +776,10 @@ curl http://localhost:3344/status</code></pre>
   <footer class="doc-footer">
     <span>es-okta-auth-proxy</span>
     <span>ECK basic license · Node 18 · openid-client 5</span>
-    <button id="theme-toggle" onclick="toggleTheme()">🌙</button>
   </footer>
+</div>
+
+<button id="theme-toggle" onclick="toggleTheme()">🌙</button>
 
 </div>
 
