@@ -1,4 +1,4 @@
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
 
 const MAP_PATH = process.env.GROUP_MAP_PATH || './config/group-map.json';
 
@@ -17,6 +17,17 @@ export function loadGroupMap() {
   } catch (err) {
     console.error('group-map: failed to parse', MAP_PATH, err.message);
   }
+}
+
+export function getGroupMap() { return groupMap; }
+
+export function setGroupMap(map) {
+  groupMap = map;
+  priority = map._priority ?? Object.keys(map).filter(k => !k.startsWith('_'));
+}
+
+export function writeGroupMap(map) {
+  writeFileSync(MAP_PATH, JSON.stringify(map, null, 2));
 }
 
 // Returns the API key for the first matching group (by priority order).
