@@ -2,6 +2,13 @@ import { request } from 'https';
 import { URL } from 'url';
 import { getGroupMap, setGroupMap, writeGroupMap } from './group-map.js';
 
+function authHeader() {
+  if (process.env.ES_ROTATION_CREDS) {
+    return 'Basic ' + Buffer.from(process.env.ES_ROTATION_CREDS).toString('base64');
+  }
+  return `ApiKey ${process.env.ES_ROTATION_KEY}`;
+}
+
 function esRequest(method, path, body) {
   return new Promise((resolve, reject) => {
     const url = new URL(process.env.ES_URL + path);
@@ -12,7 +19,7 @@ function esRequest(method, path, body) {
       path: url.pathname,
       method,
       headers: {
-        'Authorization': `ApiKey ${process.env.ES_ROTATION_KEY}`,
+        'Authorization': authHeader(),
         'Content-Type': 'application/json',
         ...(payload ? { 'Content-Length': Buffer.byteLength(payload) } : {}),
       },
@@ -86,8 +93,8 @@ export function startRotation() {
   const hours = parseFloat(process.env.KEY_ROTATION_HOURS || '0');
   if (!hours) return;
 
-  if (!process.env.ES_ROTATION_KEY) {
-    console.warn('[rotate] KEY_ROTATION_HOURS set but ES_ROTATION_KEY missing -- rotation disabled');
+  if (!process.env.ES_ROTATION_CREDS && !process.env.ES_ROTATION_KEY) {
+    console.warn('[rotate] KEY_ROTATION_HOURS set but neither ES_ROTATION_CREDS nor ES_ROTATION_KEY is set -- rotation disabled');
     return;
   }
 
