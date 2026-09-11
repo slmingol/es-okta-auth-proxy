@@ -32,7 +32,7 @@ function esRequest(method, path, body) {
   });
 }
 
-async function rotateKeys() {
+export async function rotateKeys() {
   console.log('[rotate] Starting key rotation');
   const map = getGroupMap();
   if (!map) { console.warn('[rotate] No group map loaded -- skipping'); return; }
