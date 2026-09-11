@@ -56,6 +56,7 @@ export function authRouter(app) {
         name: claims.name,
       };
       req.session.idToken = tokenSet.id_token;
+      req.session.accessToken = tokenSet.access_token;
       const dest = req.session.returnTo || '/';
       delete req.session.returnTo;
       res.redirect(dest);
@@ -67,6 +68,31 @@ export function authRouter(app) {
 
   app.get('/auth/logout', (req, res) => {
     req.session.destroy(() => res.redirect('/'));
+  });
+
+  // Full logout: revoke access token + kill Okta global session
+  app.get('/auth/revoke', async (req, res) => {
+    const idToken = req.session.idToken;
+    const accessToken = req.session.accessToken;
+    const port = process.env.PORT || 3344;
+
+    // Revoke access token so it can't be reused
+    if (accessToken) {
+      try {
+        await oidcClient.revoke(accessToken, 'access_token');
+      } catch (err) {
+        console.warn('Token revocation failed (non-fatal):', err.message);
+      }
+    }
+
+    req.session.destroy();
+
+    // Redirect to Okta end_session to kill the SSO cookie
+    const endSession = new URL(`https://${process.env.OKTA_DOMAIN}/oauth2/default/v1/logout`);
+    endSession.searchParams.set('client_id', process.env.OKTA_CLIENT_ID);
+    endSession.searchParams.set('post_logout_redirect_uri', `http://localhost:${port}`);
+    if (idToken) endSession.searchParams.set('id_token_hint', idToken);
+    res.redirect(endSession.toString());
   });
 
   app.get('/auth/me', requireAuth, (req, res) => {
