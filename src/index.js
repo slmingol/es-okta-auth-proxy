@@ -9,6 +9,7 @@ import { esProxy } from './proxy.js';
 import { mockEsRouter } from './mock-es.js';
 import { loadGroupMap } from './group-map.js';
 import { startRotation } from './rotate.js';
+import { accessLogger } from './logger.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const dashboardHtml = readFileSync(join(__dirname, 'dashboard.html'));
@@ -24,6 +25,9 @@ app.use(session({
   saveUninitialized: false,
   cookie: { secure: false }, // set true behind HTTPS
 }));
+
+// Access logging -- after session, before ES routes
+app.use(accessLogger);
 
 // Auth routes (no auth required)
 authRouter(app);
