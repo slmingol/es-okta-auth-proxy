@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/banner.svg" alt="es-okta-auth-proxy" width="900"/>
+</p>
+
 # es-okta-auth-proxy
 
 An authentication proxy that gates Elasticsearch access behind Okta SSO — translating OIDC identity into ES API key credentials without requiring a paid Elastic license.
