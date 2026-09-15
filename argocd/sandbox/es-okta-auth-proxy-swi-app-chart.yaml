@@ -1,0 +1,394 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: es-okta-auth-proxy-swi-app-chart-sandbox
+spec:
+  project: platform
+  source:
+    chart: 'swi-app-chart'
+    repoURL: 'https://bandwidth.jfrog.io/artifactory/helm'
+    targetRevision: '*-0'
+    helm:
+      values: |
+        nameOverride: ""
+        fullnameOverride: ""
+
+        # -- create configmaps to be mounted into the service
+        config: {}
+        # these get mounted into a volume at /config
+        #   config.yaml:
+        #     <config>
+
+        # -- create helm templated configmap to be mounted into the service at /tplConfig
+        tplConfig: {}
+        # these get mounted into a volume at /tplConfig
+        #   shell-file.sh:
+        #     {{ .Values.shellScript | quote }}
+
+
+        # -- list of environment variables (hardcoded or `valueFrom`). NOTE: this is a list,
+        # so a value set in any values-file layer replaces the whole list (Helm cannot merge
+        # lists across layers). Do not set the same key here and in `envMap` — it produces
+        # duplicate env vars. See docs/configuration/app-config.md#environment-variables.
+        env: []
+
+        # -- map of environment variables as key: value pairs; merges key-by-key across
+        # layered values files (preferred for cascading overrides). Values render as strings.
+        envMap: {}
+
+        # -- list of envFrom sources (e.g. references to existing Secrets/ConfigMaps
+        # created out-of-band, such as those produced by the vault-secrets chart)
+        envFrom: []
+
+        # -- list of Helm-templated init containers. Use this when an init container
+        # needs chart values or helpers, such as `{{ include "app-chart.image" . }}`.
+        # Mutually exclusive with `initContainers`.
+        initContainersTpl: []
+
+        # -- list of literal Kubernetes init containers. Mutually exclusive with
+        # `initContainersTpl`.
+        initContainers: []
+
+        image:
+          # -- Optional registry prefix for image.repository
+          registry: ""
+          repository:
+          pullPolicy: IfNotPresent
+          tag: "latest"
+          # -- Override the image entrypoint (Kubernetes container command)
+          command: []
+          # -- Arguments supplied to the image entrypoint or image.command
+          args: []
+        imagePullSecrets: []
+
+        replicaCount: 1
+
+        # -- set the deployment strategy for the app
+        deploymentStrategy:
+          # -- One of "rollingUpdate", "blueGreen", or "canary"
+          type: "blueGreen"
+          # -- config for the rollingUpdate strategy
+          rollingUpdate:
+            maxSurge: 1
+            maxUnavailable: 0
+          # -- config for the blueGreen strategy
+          blueGreen:
+            activeService: '{{ include "app-chart.fullname" . }}'
+            previewService: '{{ include "app-chart.fullname" . }}-preview'
+            autoPromotionEnabled: false
+            activeMetadata:
+              labels:
+                rollout-role: active
+            previewMetadata:
+              labels:
+                rollout-role: preview
+            # -- Argo Rollouts analysis configuration to run before promotion
+            # prePromotionAnalysis: {}
+            # -- Argo Rollouts analysis configuration to run after promotion
+            # postPromotionAnalysis: {}
+
+          analysis:
+            # -- maximum number of successful analysis and experiments to retain
+            successfulRunHistoryLimit: 3
+            # -- maximum number of unsuccessful analysis and experiments to retain
+            unsuccessfulRunHistoryLimit: 3
+          # -- add additional fields from the spec. See https://argo-rollouts.readthedocs.io/en/stable/features/specification/
+          rolloutAdditionalSpec:
+            # -- seconds before a rollout is considered failed due to lack of progress. Default Argo value is 600 (10m).
+            progressDeadlineSeconds: 900
+
+        # -- set datadog labels for discovery
+        dd:
+          # -- Preferred Datadog environment tag; overrides dd.env when set
+          environment: ""
+          env: lab
+          service: ""
+          version: ""
+
+        # -- create analysis templates for use in pre or post promotion.
+        # see https://argo-rollouts.readthedocs.io/en/stable/features/analysis/ for the spec
+        analysisTemplates: {}
+        coordinatedPromotion:
+          # -- AnalysisTemplate spec for coordinated promotion; only used when referenced by postPromotionAnalysis
+          config: {}
+        apiPrepromotion: {}
+        waitForRollOuts:
+          # -- AnalysisTemplate spec that waits for rollouts; only used when referenced by prePromotionAnalysis
+          config: {}
+        # defining the config key creates a configmap for each analysis template
+        # these configmaps are called {{ include "app-chart.fullname" $ }}-analysis-template-{{ .name }}
+        # and can be used in the pre or post promotion analysis.
+        # The spec is being helm templated and passed to the analysis template to help autopopulate the mount locations.
+        # The args in the spec cannot be used as shown in the analysis template docs because of this.
+        #  name:
+        #   config: {}
+        #   # -- config for the analysis template
+        #   spec: {}
+
+        # -- set resource requests and limits for the app.
+        # These should be tuned to the app's requirements.
+        resources: {}
+
+        livenessProbe:
+          httpGet:
+            path: /live
+            port: http
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: http
+
+        # -- Optional startup probe for the main application container
+        startupProbe: {}
+
+        volumes: []
+        volumeMounts: []
+
+        # -- seconds the pod has to terminate gracefully after SIGTERM before SIGKILL.
+        # Unset uses the Kubernetes default of 30s.
+        terminationGracePeriodSeconds:
+
+        # -- container lifecycle hooks for the main app container. Pass-through to the
+        # Kubernetes container.lifecycle spec
+        # (https://kubernetes.io/docs/tasks/configure-pod-container/attach-handler-lifecycle-event/).
+        # Common use: a preStop hook paired with terminationGracePeriodSeconds for graceful shutdown.
+        lifecycle: {}
+
+        # -- define persistent volume claims to be created for the app. If spec is a string block instead of a map, template values may be used.
+        pvcs: {}
+
+        serviceAccount:
+          create: true
+          automount: true
+          annotations: {}
+          name: ""
+
+        # -- override the name of the service container in the pod template
+        containerName: ""
+
+        # -- These annotations will applied to the deployment. If a string block is used instead of a map, template values may be used.
+        annotations: {}
+
+        # -- These annotations will applied to the pod. If a string block is used instead of a map, template values may be used.
+        podAnnotations: {}
+        podLabels:
+          # -- label to allow these pods to be mutated by the datadog admission webhook
+          admission.datadoghq.com/enabled: "true"
+
+        podSecurityContext:
+          fsGroup: 2000
+
+        securityContext:
+          capabilities:
+            drop:
+              - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+
+        podDisruptionBudget:
+          enabled: false
+          maxUnavailable: 1
+          # -- Minimum available pods. Mutually exclusive with maxUnavailable.
+          minAvailable:
+
+        service:
+          type: NodePort
+          # -- Configure session affinity for the service. Set to "ClientIP" to enable sticky sessions.
+          sessionAffinity: ""
+          # -- Define ports to expose on the deployment and service
+          ports:
+            http:
+              port: 8080
+              protocol: TCP
+
+        ingress:
+          enabled: false
+          className: alb
+          annotations:
+            external-dns.alpha.kubernetes.io/alias: "true"
+          albAnnotations:
+            alb.ingress.kubernetes.io/target-type: instance
+            alb.ingress.kubernetes.io/scheme: internal
+            alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS13-1-3-PQ-2025-09
+            alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 443}]'
+            alb.ingress.kubernetes.io/healthcheck-path: "{{ .Values.readinessProbe.httpGet.path }}"
+          hosts: []
+          tls: []
+
+        autoscaling:
+          enabled: false
+          minReplicas: 1
+          maxReplicas: 100
+          targetCPUUtilizationPercentage: 80
+          # -- Optional target average memory utilization percentage for HPA
+          targetMemoryUtilizationPercentage:
+          keda:
+            enabled: false
+            # -- KEDA ScaledObject configuration
+            spec: {}
+            # -- Additional labels to add to the ScaledObject metadata
+            labels: {}
+            # -- Annotations to add to the ScaledObject metadata
+            annotations: {}
+            triggerAuthentication: |
+              podIdentity:
+                provider: aws
+
+        # -- Pod topology spread constraints. labelSelector and matchLabelKeys will be set automatically unless provided.
+        topologySpreadConstraints:
+          - maxSkew: 1
+            topologyKey: topology.kubernetes.io/zone
+            whenUnsatisfiable: ScheduleAnyway
+
+        nodeSelector: {}
+        tolerations: []
+        affinity: {}
+
+        # -- Additional labels applied to the Deployment or Rollout metadata
+        labels: {}
+
+        rbac:
+          create: false
+          rules: []
+          # Example rules:
+          # - apiGroups: ["argoproj.io"]
+          #   resources: ["rollouts", "rollouts/scale", "rollouts/status"]
+          #   verbs: ["get","list","watch","update","patch"]
+
+        # -- set the vault configuration for the app
+        vault:
+          # -- vault address
+          address: "https://vault.aws.bandwidth.com:8200"
+          # -- skipping tls verification set to false
+          skipTLSVerify: false
+          # -- The role to use for Vault authentication
+          vaultRole:
+          # -- Name of the VaultAuth resource; defaults to <release>-vault-auth
+          vaultAuthRef: ""
+          # -- Name of the VaultConnection resource; defaults to <release>-vault-connection
+          vaultConnection: ""
+          # -- The ARN of the role to assume for Vault access
+          roleArn:
+          serviceAccount:
+            # -- The name of the service account to use for assuming the Vault IAM role
+            name:
+            # -- Whether to create the service account. If one has already been created for this namespace, this must be disabled.
+            create: true
+          # -- Default transformation applied to every VaultStaticSecret destination. Merged with per-secret transformation (per-secret wins on conflicts).
+          defaultTransformation:
+            excludeRaw: true
+          # -- The vault secrets to mount into the app
+          secrets: {}
+          #     <name>:
+          #       vaultPath: <vaultPath> # -- path to the secret in vault
+          #       vaultNamespace: <vaultNamespace> # -- namespace of the vault secret
+          #       mountPath: <mountPath> # -- path to mount the secret in the container
+          #       exportEnv: <exportEnv> # -- export the secret as an env var
+          #       restartTarget: <true> # -- restart the app's Deployment/Rollout when the secret changes
+          #       additionalRestartTargets: [] # -- extra rolloutRestartTargets beyond the app's own Deployment/Rollout; each entry is {name, kind}
+          #       instantUpdates: <true> # -- subscribe to Vault events for near-instant secret updates (requires Vault Enterprise 1.16.3+)
+          #       transformation: {} # -- merged over vault.defaultTransformation; supports excludeRaw, excludes, includes, templates (see VSO docs)
+          # -- Create an image pull secret for Artifactory
+          artifactory:
+            create: false
+            type: prod
+            refreshAfter: 15m
+            renewalPercent: 50
+            secretName: ""
+            # -- List of Artifactory registry hosts to configure
+            dockerRegistries:
+              - "https://bandwidth-docker.jfrog.io"
+              - "https://bandwidth-docker-prod.jfrog.io"
+              - "https://bandwidth-docker-local.jfrog.io"
+              - "https://bandwidth-docker-local-prod.jfrog.io"
+
+        # -- Namespaced External Secrets Operator SecretStore resources. Each key becomes
+        # the resource name. Cluster-scoped ClusterSecretStores are managed by cluster
+        # tooling, not this chart; reference one from externalSecrets.secretStoreKind.
+        secretStores: {}
+        #   my-vault-store:
+        #     # -- "vault" (default) or "aws"
+        #     externalProvider: vault
+        #     vault:
+        #       # -- defaults to vault.address
+        #       server: ""
+        #       # -- KV secret engine mount path in Vault (e.g. myapp/prod).
+        #       # Omitted from the manifest when empty.
+        #       path: ""
+        #       # -- AWS IAM auth via IRSA. This is the default on EKS; every field falls
+        #       # back to the chart's top-level vault config, so most stores need no auth block.
+        #       iam:
+        #         # -- Vault role; defaults to vault.vaultRole
+        #         vaultRole: ""
+        #         # -- defaults to us-east-1
+        #         region: ""
+        #         # -- Vault auth mount path; defaults to aws_iam
+        #         mountPath: ""
+        #         # -- service account whose token ESO exchanges for AWS credentials; defaults
+        #         # to the chart's own service account. It must carry an
+        #         # eks.amazonaws.com/role-arn annotation for a role Vault trusts.
+        #         serviceAccountName: ""
+        #       # -- Kubernetes JWT auth, for in-cluster Vault or non-EKS clusters. Set this
+        #       # to use JWT instead of IAM; mutually exclusive with iam. role is required.
+        #       jwtAuth: {}
+        #         # role: my-vault-role
+        #         # mountPath: kubernetes
+        #         # serviceAccountName: default
+        #         # audiences:
+        #         #   - https://kubernetes.default.svc
+        #     aws:
+        #       # -- defaults to SecretsManager
+        #       service: SecretsManager
+        #       # -- defaults to us-east-1
+        #       region: us-east-1
+        #       roleArn: ""
+        #       # -- when set, authenticates with IAM Roles for Service Accounts and the
+        #       # accessKey/secretAccessKey refs below are not required
+        #       jwt: {}
+        #         # serviceAccountRef:
+        #         #   name: external-secrets
+        #         #   namespace: external-secrets
+        #       # -- static credentials; required unless aws.jwt is set
+        #       accessKeyIDSecretRef:
+        #         name: awssm-secret
+        #         key: access-key
+        #       secretAccessKeySecretRef:
+        #         name: awssm-secret
+        #         key: secret-access-key
+        #       # -- namespace holding the credential secret; omit for the release namespace
+        #       secretRefNamespace: ""
+
+        # -- ExternalSecret resources. Each key becomes the resource name. Requires
+        # secretStoreRef and at least one of data or dataFrom.
+        externalSecrets: {}
+        #   my-secret:
+        #     # -- name of the SecretStore or ClusterSecretStore to read from
+        #     secretStoreRef: "my-vault-store"
+        #     # -- "SecretStore" (default) or "ClusterSecretStore"
+        #     secretStoreKind: "SecretStore"
+        #     # -- name of the generated Secret; defaults to <fullname>-<key>
+        #     secretName: ""
+        #     # -- defaults to 1h
+        #     refreshInterval: 1h
+        #     template: {}
+        #     data: []
+        #     # - secretKey: "my-key"
+        #     #   remoteRef:
+        #     #     key: "path/to/secret"
+        #     #     property: "field"
+        #     dataFrom: []
+        #     # - extract:
+        #     #     key: "path/to/secret"
+  destination:
+    name: 'paas-test-cluster'
+    namespace: 'es-okta-auth-proxy'
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    managedNamespaceMetadata:
+      labels:
+        docker.bandwidth.com/auto-inject-pull-secret: "true"
