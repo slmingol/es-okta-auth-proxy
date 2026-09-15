@@ -30,7 +30,11 @@ export function writeGroupMap(map) {
   try {
     writeFileSync(MAP_PATH, JSON.stringify(map, null, 2));
   } catch (err) {
-    console.warn('[group-map] Skipping disk write:', err.message);
+    if (err.code === 'EROFS' || err.code === 'EACCES') {
+      console.warn('[group-map] Skipping disk write (read-only mount):', err.message);
+    } else {
+      throw err;
+    }
   }
 }
 

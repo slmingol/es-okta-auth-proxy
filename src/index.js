@@ -41,7 +41,6 @@ app.get('/docs/architecture', (req, res) => {
   res.send(architectureHtml);
 });
 
-// Health probes
 app.get('/live', (_, res) => res.json({ status: 'ok' }));
 app.get('/ready', (_, res) => ready
   ? res.json({ status: 'ok' })
