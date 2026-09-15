@@ -39,6 +39,35 @@ make up
 open http://localhost:3344
 ```
 
+## Docker / Podman
+
+The proxy ships as a multi-stage container image (node:22-alpine). The Makefile auto-detects Docker or Podman and the appropriate compose variant.
+
+**Build and run with Docker Compose:**
+
+```bash
+docker compose up -d
+```
+
+**Build and run with Podman Compose:**
+
+```bash
+podman compose up -d
+```
+
+**Run directly (without Compose):**
+
+```bash
+docker build -t es-okta-auth-proxy .
+docker run -d \
+  --env-file .env \
+  -v $(pwd)/config:/app/config \
+  -p 3344:3344 \
+  es-okta-auth-proxy
+```
+
+The `config/` directory is mounted as a volume so `group-map.json` can be updated (and rewritten by key rotation) without rebuilding the image. In Kubernetes, mount it as a Secret volume at `/app/config/group-map.json`.
+
 ## Okta setup
 
 1. Create an OIDC web application in Okta (Applications > Create App Integration > OIDC)
