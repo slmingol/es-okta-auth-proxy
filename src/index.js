@@ -14,6 +14,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const dashboardHtml = readFileSync(join(__dirname, 'dashboard.html'));
 const architectureHtml = readFileSync(join(__dirname, '..', 'docs', 'architecture.html'));
 
+let ready = false;
 const app = express();
 const PORT = process.env.PORT || 3333;
 const MOCK_MODE = process.env.ES_URL === 'mock';
@@ -40,6 +41,12 @@ app.get('/docs/architecture', (req, res) => {
   res.send(architectureHtml);
 });
 
+// Health probes
+app.get('/live', (_, res) => res.json({ status: 'ok' }));
+app.get('/ready', (_, res) => ready
+  ? res.json({ status: 'ok' })
+  : res.status(503).json({ status: 'starting' }));
+
 // JSON status endpoint
 app.get('/status', (req, res) => {
   res.json({
@@ -63,6 +70,7 @@ app.listen(PORT, async () => {
   loadGroupMap();
   startRotation();
   await initOkta();
+  ready = true;
   console.log(`es-okta-auth-proxy listening on http://localhost:${PORT}`);
   console.log(`ES mode: ${MOCK_MODE ? 'MOCK' : process.env.ES_URL}`);
 });

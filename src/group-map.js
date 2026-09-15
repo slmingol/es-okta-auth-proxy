@@ -27,7 +27,11 @@ export function setGroupMap(map) {
 }
 
 export function writeGroupMap(map) {
-  writeFileSync(MAP_PATH, JSON.stringify(map, null, 2));
+  try {
+    writeFileSync(MAP_PATH, JSON.stringify(map, null, 2));
+  } catch (err) {
+    console.warn('[group-map] Skipping disk write:', err.message);
+  }
 }
 
 // Returns the API key for the first matching group (by priority order).
