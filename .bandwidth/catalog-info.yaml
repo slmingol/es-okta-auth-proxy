@@ -1,0 +1,11 @@
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  schemaVersion: v1.0.0
+  name: es-okta-auth-proxy-location
+  description: Links to additional entities in the es-okta-auth-proxy repository.
+  annotations:
+    github.com/project-slug: Bandwidth/es-okta-auth-proxy
+spec:
+  targets:
+    - ./component.yaml
