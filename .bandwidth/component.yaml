@@ -1,0 +1,21 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  schemaVersion: v1.0.0
+  name: es-okta-auth-proxy
+  description: Forked from https://github.com/slmingol/es-okta-auth-proxy
+  annotations:
+    github.com/project-slug: Bandwidth/es-okta-auth-proxy
+    bandwidth.com/environment: non-production
+  organization: BW
+  costCenter: undefined
+  platformType:
+    - OCP4
+  buildPlatform: GitHub Actions
+spec:
+  type: Service
+  owner: github/band-platform
+  lifecycle: Prototype
+  dependsOn:
+    - resource:platform/GitHub Actions
+    - resource:cost-center/undefined
