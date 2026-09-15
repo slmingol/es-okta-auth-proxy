@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="580" viewBox="0 0 900 580">
+  <defs>
+    <clipPath id="win"><rect width="900" height="580" rx="10"/></clipPath>
+  </defs>
+
+  <!-- Window chrome -->
+  <rect width="900" height="580" rx="10" fill="#1c1c1e" clip-path="url(#win)"/>
+  <rect width="900" height="38" fill="#2a2a2c"/>
+  <!-- Traffic lights -->
+  <circle cx="18" cy="19" r="6" fill="#ff5f56"/>
+  <circle cx="36" cy="19" r="6" fill="#febc2e"/>
+  <circle cx="54" cy="19" r="6" fill="#28c840"/>
+  <!-- URL bar -->
+  <rect x="120" y="8" width="540" height="22" rx="5" fill="#3a3a3c"/>
+  <text x="390" y="23" font-family="monospace" font-size="11" fill="#8e8e93" text-anchor="middle">localhost:3344</text>
+
+  <!-- App background -->
+  <rect y="38" width="900" height="542" fill="#111827"/>
+
+  <!-- App header -->
+  <rect y="38" width="900" height="52" fill="#111827"/>
+  <line x1="0" y1="89" x2="900" y2="89" stroke="#1f2937" stroke-width="1"/>
+  <text x="24" y="71" font-family="-apple-system,sans-serif" font-size="15" font-weight="700" fill="#f9fafb">ES Auth Proxy — POC</text>
+  <!-- Theme toggle -->
+  <rect x="776" y="56" width="36" height="22" rx="11" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+  <text x="794" y="71" font-family="monospace" font-size="12" fill="#9ca3af" text-anchor="middle">🌙</text>
+  <!-- User badge -->
+  <rect x="818" y="56" width="68" height="22" rx="11" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+  <circle cx="830" cy="67" r="4" fill="#22c55e"/>
+  <text x="862" y="71" font-family="-apple-system,sans-serif" font-size="9" fill="#9ca3af" text-anchor="middle">okta-dev@…</text>
+
+  <!-- CLUSTER section -->
+  <text x="24" y="114" font-family="-apple-system,sans-serif" font-size="10" font-weight="600" fill="#6b7280" letter-spacing="0.08em">CLUSTER</text>
+  <!-- cards row 1 -->
+  <!-- Cluster Health -->
+  <rect x="24" y="122" width="150" height="52" rx="8" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+  <text x="38" y="142" font-family="-apple-system,sans-serif" font-size="12" font-weight="600" fill="#f9fafb">Cluster Health</text>
+  <text x="38" y="158" font-family="monospace" font-size="10" fill="#6b7280">/_cluster/health</text>
+  <!-- Cluster Stats -->
+  <rect x="182" y="122" width="150" height="52" rx="8" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+  <text x="196" y="142" font-family="-apple-system,sans-serif" font-size="12" font-weight="600" fill="#f9fafb">Cluster Stats</text>
+  <text x="196" y="158" font-family="monospace" font-size="10" fill="#6b7280">/_cluster/stats</text>
+  <!-- Indices -->
+  <rect x="340" y="122" width="150" height="52" rx="8" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+  <text x="354" y="142" font-family="-apple-system,sans-serif" font-size="12" font-weight="600" fill="#f9fafb">Indices</text>
+  <text x="354" y="158" font-family="monospace" font-size="10" fill="#6b7280">/_cat/indices</text>
+  <!-- Nodes -->
+  <rect x="498" y="122" width="150" height="52" rx="8" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+  <text x="512" y="142" font-family="-apple-system,sans-serif" font-size="12" font-weight="600" fill="#f9fafb">Nodes</text>
+  <text x="512" y="158" font-family="monospace" font-size="10" fill="#6b7280">/_cat/nodes</text>
+  <!-- Shards -->
+  <rect x="656" y="122" width="150" height="52" rx="8" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+  <text x="670" y="142" font-family="-apple-system,sans-serif" font-size="12" font-weight="600" fill="#f9fafb">Shards</text>
+  <text x="670" y="158" font-family="monospace" font-size="10" fill="#6b7280">/_cat/shards</text>
+
+  <!-- SEARCH section -->
+  <text x="24" y="200" font-family="-apple-system,sans-serif" font-size="10" font-weight="600" fill="#6b7280" letter-spacing="0.08em">SEARCH</text>
+  <rect x="24" y="208" width="150" height="52" rx="8" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+  <text x="38" y="228" font-family="-apple-system,sans-serif" font-size="12" font-weight="600" fill="#f9fafb">Global Search (3)</text>
+  <text x="38" y="244" font-family="monospace" font-size="10" fill="#6b7280">/_search?size=3</text>
+  <rect x="182" y="208" width="150" height="52" rx="8" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+  <text x="196" y="228" font-family="-apple-system,sans-serif" font-size="12" font-weight="600" fill="#f9fafb">Aliases</text>
+  <text x="196" y="244" font-family="monospace" font-size="10" fill="#6b7280">/_aliases</text>
+
+  <!-- DOCS section -->
+  <text x="24" y="286" font-family="-apple-system,sans-serif" font-size="10" font-weight="600" fill="#6b7280" letter-spacing="0.08em">DOCS</text>
+  <rect x="24" y="294" width="150" height="52" rx="8" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+  <text x="38" y="314" font-family="-apple-system,sans-serif" font-size="12" font-weight="600" fill="#f9fafb">Architecture</text>
+  <text x="38" y="330" font-family="monospace" font-size="10" fill="#6b7280">/docs/architecture</text>
+
+  <!-- AUTH section -->
+  <text x="24" y="372" font-family="-apple-system,sans-serif" font-size="10" font-weight="600" fill="#6b7280" letter-spacing="0.08em">AUTH</text>
+  <rect x="24" y="380" width="150" height="52" rx="8" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+  <text x="38" y="400" font-family="-apple-system,sans-serif" font-size="12" font-weight="600" fill="#f9fafb">My Identity</text>
+  <text x="38" y="416" font-family="monospace" font-size="10" fill="#6b7280">/auth/me</text>
+  <rect x="182" y="380" width="150" height="52" rx="8" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+  <text x="196" y="400" font-family="-apple-system,sans-serif" font-size="12" font-weight="600" fill="#f9fafb">Login</text>
+  <text x="196" y="416" font-family="monospace" font-size="10" fill="#6b7280">/auth/login</text>
+  <!-- Logout danger -->
+  <rect x="340" y="380" width="150" height="52" rx="8" fill="#1f2937" stroke="#7f1d1d" stroke-width="1"/>
+  <text x="354" y="400" font-family="-apple-system,sans-serif" font-size="12" font-weight="600" fill="#f87171">Logout</text>
+  <text x="354" y="416" font-family="monospace" font-size="10" fill="#6b7280">/auth/logout</text>
+  <!-- Force Full Logout danger -->
+  <rect x="498" y="380" width="190" height="52" rx="8" fill="#1f2937" stroke="#7f1d1d" stroke-width="1"/>
+  <text x="512" y="400" font-family="-apple-system,sans-serif" font-size="12" font-weight="600" fill="#f87171">Force Full Logout</text>
+  <text x="512" y="416" font-family="monospace" font-size="10" fill="#6b7280">/auth/revoke — kills Okta SSO</text>
+
+  <!-- Response panel -->
+  <text x="24" y="456" font-family="-apple-system,sans-serif" font-size="10" font-weight="600" fill="#6b7280" letter-spacing="0.08em">RESPONSE — /_CLUSTER/HEALTH</text>
+  <rect x="24" y="464" width="852" height="98" rx="8" fill="#0f172a" stroke="#1f2937" stroke-width="1"/>
+  <text x="40" y="484" font-family="monospace" font-size="11" fill="#94a3b8">{</text>
+  <text x="56" y="499" font-family="monospace" font-size="11" fill="#94a3b8">  <tspan fill="#7dd3fc">"cluster_name"</tspan>: <tspan fill="#86efac">"elasticsearch"</tspan>,</text>
+  <text x="56" y="514" font-family="monospace" font-size="11" fill="#94a3b8">  <tspan fill="#7dd3fc">"status"</tspan>: <tspan fill="#86efac">"green"</tspan>,</text>
+  <text x="56" y="529" font-family="monospace" font-size="11" fill="#94a3b8">  <tspan fill="#7dd3fc">"number_of_nodes"</tspan>: <tspan fill="#fbbf24">5</tspan>,</text>
+  <text x="56" y="544" font-family="monospace" font-size="11" fill="#94a3b8">  <tspan fill="#7dd3fc">"active_shards"</tspan>: <tspan fill="#fbbf24">142</tspan></text>
+  <text x="40" y="559" font-family="monospace" font-size="11" fill="#94a3b8">}</text>
+</svg>
