@@ -8,6 +8,12 @@ An authentication proxy that gates Elasticsearch access behind Okta SSO — tran
 
 Elasticsearch's native SSO (SAML, OIDC, LDAP) requires Gold or Platinum. This proxy fills that gap for clusters running on the free Basic license (including ECK operator deployments).
 
+## Dashboard
+
+<p align="center">
+  <img src="assets/screenshot.svg" alt="Dashboard UI" width="900"/>
+</p>
+
 ## How it works
 
 ```
