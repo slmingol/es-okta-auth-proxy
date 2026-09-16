@@ -34,11 +34,14 @@ spec:
 
         # -- map of environment variables as key: value pairs; merges key-by-key across
         # layered values files (preferred for cascading overrides). Values render as strings.
-        envMap: {}
+        envMap:
+          PORT: "8080"
 
         # -- list of envFrom sources (e.g. references to existing Secrets/ConfigMaps
         # created out-of-band, such as those produced by the vault-secrets chart)
-        envFrom: []
+        envFrom:
+          - secretRef:
+              name: es-okta-auth-proxy-app-secrets
 
         # -- list of Helm-templated init containers. Use this when an init container
         # needs chart values or helpers, such as `{{ include "app-chart.image" . }}`.
@@ -362,7 +365,15 @@ spec:
 
         # -- ExternalSecret resources. Each key becomes the resource name. Requires
         # secretStoreRef and at least one of data or dataFrom.
-        externalSecrets: {}
+        externalSecrets:
+          app-secrets:
+            secretStoreRef: "aws-eso-cluster-secret-store"
+            secretStoreKind: "ClusterSecretStore"
+            secretName: "es-okta-auth-proxy-app-secrets"
+            refreshInterval: 1h
+            dataFrom:
+              - extract:
+                  key: "platform/sandbox/es-okta-auth-proxy/app-secrets"
         #   my-secret:
         #     # -- name of the SecretStore or ClusterSecretStore to read from
         #     secretStoreRef: "my-vault-store"
