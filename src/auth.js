@@ -75,8 +75,6 @@ export function authRouter(app) {
   app.get('/auth/revoke', async (req, res) => {
     const idToken = req.session.idToken;
     const accessToken = req.session.accessToken;
-    const port = process.env.PORT || 3344;
-
     // Revoke access token so it can't be reused
     if (accessToken) {
       try {
@@ -88,10 +86,14 @@ export function authRouter(app) {
 
     req.session.destroy();
 
+    const port = process.env.PORT || 3344;
+    const redirectUri = process.env.OKTA_REDIRECT_URI || `http://localhost:${port}/auth/callback`;
+    const postLogoutUri = new URL(redirectUri).origin;
+
     // Redirect to Okta end_session to kill the SSO cookie
     const endSession = new URL(`https://${process.env.OKTA_DOMAIN}/oauth2/default/v1/logout`);
     endSession.searchParams.set('client_id', process.env.OKTA_CLIENT_ID);
-    endSession.searchParams.set('post_logout_redirect_uri', `http://localhost:${port}`);
+    endSession.searchParams.set('post_logout_redirect_uri', postLogoutUri);
     if (idToken) endSession.searchParams.set('id_token_hint', idToken);
     res.redirect(endSession.toString());
   });
