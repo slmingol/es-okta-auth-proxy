@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: es-okta-auth-proxy-image-updater
+spec:
+  project: platform
+  source:
+    chart: 'argocd-image-updater'
+    repoURL: 'https://bandwidth.jfrog.io/artifactory/helm'
+    targetRevision: '0.1.4'
+    helm:
+      values: |
+        globalUpdateStrategy: semver
+        useAnnotations: false
+
+        applications:
+          - name: es-okta-auth-proxy-swi-app-chart-sandbox
+            images:
+              - alias: es-okta-auth-proxy
+                imageName: bandwidth-docker.jfrog.io/es-okta-auth-proxy/es-okta-auth-proxy
+                updateSettings:
+                  allowTags: 'regexp:^[0-9]+\.[0-9]+\.[0-9]+$'
+                  updateStrategy: semver
+                manifestTargets:
+                  helm:
+                    tag: image.tag
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: es-okta-auth-proxy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
