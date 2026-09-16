@@ -267,13 +267,13 @@ spec:
           # -- skipping tls verification set to false
           skipTLSVerify: false
           # -- The role to use for Vault authentication
-          vaultRole: 221082208920
+          vaultRole: "221082208920"
           # -- Name of the VaultAuth resource; defaults to <release>-vault-auth
           vaultAuthRef: ""
           # -- Name of the VaultConnection resource; defaults to <release>-vault-connection
           vaultConnection: ""
           # -- The ARN of the role to assume for Vault access
-          roleArn: arn:aws:iam::103854071333:role/paas-vault-reader-paas-test-cluster
+          roleArn: arn:aws:iam::221082208920:role/paas-vault-reader-paas-test-cluster
           serviceAccount:
             # -- The name of the service account to use for assuming the Vault IAM role
             name:
