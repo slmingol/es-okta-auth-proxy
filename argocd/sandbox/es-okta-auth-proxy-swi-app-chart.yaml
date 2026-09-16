@@ -54,7 +54,7 @@ spec:
           registry: "bandwidth-docker.jfrog.io"
           repository: es-okta-auth-proxy/es-okta-auth-proxy
           pullPolicy: IfNotPresent
-          tag: "latest"
+          tag: "0.1.0"
           # -- Override the image entrypoint (Kubernetes container command)
           command: []
           # -- Arguments supplied to the image entrypoint or image.command
