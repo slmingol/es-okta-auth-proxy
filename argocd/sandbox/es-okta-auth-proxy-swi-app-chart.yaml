@@ -59,7 +59,8 @@ spec:
           command: []
           # -- Arguments supplied to the image entrypoint or image.command
           args: []
-        imagePullSecrets: []
+        imagePullSecrets:
+          - name: bandwidth-docker-config
 
         replicaCount: 1
 
