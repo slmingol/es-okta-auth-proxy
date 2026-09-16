@@ -267,13 +267,13 @@ spec:
           # -- skipping tls verification set to false
           skipTLSVerify: false
           # -- The role to use for Vault authentication
-          vaultRole:
+          vaultRole: 221082208920
           # -- Name of the VaultAuth resource; defaults to <release>-vault-auth
           vaultAuthRef: ""
           # -- Name of the VaultConnection resource; defaults to <release>-vault-connection
           vaultConnection: ""
           # -- The ARN of the role to assume for Vault access
-          roleArn:
+          roleArn: arn:aws:iam::103854071333:role/paas-vault-reader-paas-test-cluster
           serviceAccount:
             # -- The name of the service account to use for assuming the Vault IAM role
             name:
@@ -310,7 +310,11 @@ spec:
         # -- Namespaced External Secrets Operator SecretStore resources. Each key becomes
         # the resource name. Cluster-scoped ClusterSecretStores are managed by cluster
         # tooling, not this chart; reference one from externalSecrets.secretStoreKind.
-        secretStores: {}
+        secretStores:
+          es-okta-auth-proxy-vault-store:
+            externalProvider: vault
+            vault:
+              path: workloads/sandbox/platform/secrets
         #   my-vault-store:
         #     # -- "vault" (default) or "aws"
         #     externalProvider: vault
@@ -367,13 +371,12 @@ spec:
         # secretStoreRef and at least one of data or dataFrom.
         externalSecrets:
           app-secrets:
-            secretStoreRef: "aws-eso-cluster-secret-store"
-            secretStoreKind: "ClusterSecretStore"
+            secretStoreRef: "es-okta-auth-proxy-vault-store"
             secretName: "es-okta-auth-proxy-app-secrets"
             refreshInterval: 1h
             dataFrom:
               - extract:
-                  key: "platform/sandbox/es-okta-auth-proxy/app-secrets"
+                  key: es-okta-auth-proxy
         #   my-secret:
         #     # -- name of the SecretStore or ClusterSecretStore to read from
         #     secretStoreRef: "my-vault-store"
