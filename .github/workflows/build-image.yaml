@@ -22,4 +22,3 @@ jobs:
       image-name: "es-okta-auth-proxy"
       image-context: "."
       image-namespace: "es-okta-auth-proxy"
-      release-prefix: "es-okta-auth-proxy-"
