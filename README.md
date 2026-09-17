@@ -198,6 +198,19 @@ ES_URL=mock
 - Mount `config/group-map.json` as a Kubernetes Secret volume in K8s deployments
 - `GROUP_MAP_PATH` env var overrides the default config path
 
+## Bandwidth Internal Deployment (sandbox)
+
+Live on `paas-test-cluster` via ArgoCD/Helm.
+
+| App | Link |
+|---|---|
+| App-of-Apps | https://argocd.sbx1.eks.platform.bandwidth.com/applications/platform/es-okta-auth-proxy-apps |
+| swi-app-chart (workload) | https://argocd.sbx1.eks.platform.bandwidth.com/applications/platform/es-okta-auth-proxy-swi-app-chart-sandbox |
+| Image Updater | https://argocd.sbx1.eks.platform.bandwidth.com/applications/platform/es-okta-auth-proxy-image-updater |
+| Vault secrets | https://vault.aws.bandwidth.com:8200/ui/vault/secrets/secrets/kv/es-okta-auth-proxy/details?namespace=workloads%2Fsandbox%2Fplatform&version=2 |
+
+Ingress: `https://es-okta-auth-proxy.paas-test-cluster.paas.lab.us.aws.bandwidth.com`
+
 ## License
 
 MIT
