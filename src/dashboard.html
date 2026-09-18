@@ -183,6 +183,11 @@
   </div>
 </div>
 
+<footer style="position:fixed;bottom:0;left:0;right:0;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;font-size:11px;font-family:monospace;border-top:1px solid var(--border,#e0e0e0);background:var(--bg,#fff);color:var(--text-muted,#888);z-index:50;">
+  <span id="version-label">v&mdash;</span>
+  <span>es-okta-auth-proxy</span>
+</footer>
+
 <div id="response" hidden>
   <div id="response-title">Response</div>
   <div class="spinner" id="spinner">fetching...</div>
@@ -202,6 +207,9 @@
       } else {
         dot.classList.add('anon');
         label.textContent = 'not logged in';
+      }
+      if (d.version) {
+        document.getElementById('version-label').textContent = `v${d.version}`;
       }
     } catch {}
   }
