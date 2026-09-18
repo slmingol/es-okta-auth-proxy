@@ -86,15 +86,14 @@ export function authRouter(app) {
 
     req.session.destroy();
 
-    const port = process.env.PORT || 3344;
-    const redirectUri = process.env.OKTA_REDIRECT_URI || `http://localhost:${port}/auth/callback`;
-    const postLogoutUri = new URL(redirectUri).origin;
-
     // Redirect to Okta end_session to kill the SSO cookie
     const endSession = new URL(`https://${process.env.OKTA_DOMAIN}/oauth2/default/v1/logout`);
     endSession.searchParams.set('client_id', process.env.OKTA_CLIENT_ID);
-    endSession.searchParams.set('post_logout_redirect_uri', postLogoutUri);
     if (idToken) endSession.searchParams.set('id_token_hint', idToken);
+    // post_logout_redirect_uri must be registered in Okta app Sign-out redirect URIs
+    if (process.env.OKTA_POST_LOGOUT_URI) {
+      endSession.searchParams.set('post_logout_redirect_uri', process.env.OKTA_POST_LOGOUT_URI);
+    }
     res.redirect(endSession.toString());
   });
 

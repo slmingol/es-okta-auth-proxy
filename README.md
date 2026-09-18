@@ -191,6 +191,16 @@ Run without a real ES cluster for testing the auth flow:
 ES_URL=mock
 ```
 
+## Secrets (HashiCorp Vault)
+
+All secrets are stored in Vault under:
+
+- **UI:** https://vault.aws.bandwidth.com:8200/ui/vault/secrets/secrets/kv/es-okta-auth-proxy?namespace=workloads%2Fsandbox%2Fplatform
+- **Namespace:** `workloads/sandbox/platform`
+- **Engine / path:** `secrets/kv/es-okta-auth-proxy`
+
+All app secrets are stored here: `ES_API_KEY`, `ES_ROTATION_CREDS`, `ES_ROTATION_KEY`, `ES_URL`, `KEY_ROTATION_HOURS`, `OKTA_CLIENT_ID`, `OKTA_CLIENT_SECRET`, `OKTA_DOMAIN`, `OKTA_POST_LOGOUT_URI`, `OKTA_REDIRECT_URI`, `PORT`, `SESSION_SECRET`.
+
 ## Production notes
 
 - Session storage is in-memory — use Redis-backed sessions for multi-instance deployments
