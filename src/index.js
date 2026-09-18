@@ -12,6 +12,7 @@ import { startRotation } from './rotate.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const dashboardHtml = readFileSync(join(__dirname, 'dashboard.html'));
+const { version } = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8'));
 const architectureHtml = readFileSync(join(__dirname, '..', 'docs', 'architecture.html'));
 
 let ready = false;
@@ -50,6 +51,7 @@ app.get('/ready', (_, res) => ready
 app.get('/status', (req, res) => {
   res.json({
     status: 'ok',
+    version,
     user: req.session?.user ?? null,
     es: MOCK_MODE ? 'mock' : process.env.ES_URL,
     mock: MOCK_MODE,
