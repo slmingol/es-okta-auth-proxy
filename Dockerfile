@@ -9,7 +9,6 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY src ./src
 COPY docs ./docs
 COPY package.json ./
-COPY README.html ./
 ARG APP_VERSION=dev
 ENV APP_VERSION=$APP_VERSION
 EXPOSE 3344
