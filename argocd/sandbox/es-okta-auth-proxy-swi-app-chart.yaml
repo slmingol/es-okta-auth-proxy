@@ -82,7 +82,7 @@ spec:
           blueGreen:
             activeService: '{{ include "app-chart.fullname" . }}'
             previewService: '{{ include "app-chart.fullname" . }}-preview'
-            autoPromotionEnabled: false
+            autoPromotionEnabled: true
             activeMetadata:
               labels:
                 rollout-role: active
