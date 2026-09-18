@@ -9,10 +9,6 @@ spec:
     repoURL: 'https://bandwidth.jfrog.io/artifactory/helm'
     targetRevision: '*-0'
     helm:
-      parameters:
-        # image updater patches this parameter directly — do not move back to inline values
-        - name: image.tag
-          value: "0.1.3"
       values: |
         nameOverride: ""
         fullnameOverride: ""
@@ -60,6 +56,7 @@ spec:
           # -- Optional registry prefix for image.repository
           registry: "bandwidth-docker.jfrog.io"
           repository: es-okta-auth-proxy/es-okta-auth-proxy
+          tag: "0.1.5"
           pullPolicy: IfNotPresent
           # -- Override the image entrypoint (Kubernetes container command)
           command: []
