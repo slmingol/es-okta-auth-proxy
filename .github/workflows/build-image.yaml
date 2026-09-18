@@ -5,12 +5,14 @@ on:
     paths:
       - src/**
       - Dockerfile
+      - package.json
       - .github/workflows/build-image.yaml
   push:
     branches: [main]
     paths:
       - src/**
       - Dockerfile
+      - package.json
       - .github/workflows/build-image.yaml
 name: Image Build And Promote
 jobs:
