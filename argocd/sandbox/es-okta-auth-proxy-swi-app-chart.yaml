@@ -9,6 +9,10 @@ spec:
     repoURL: 'https://bandwidth.jfrog.io/artifactory/helm'
     targetRevision: '*-0'
     helm:
+      parameters:
+        # image updater patches this parameter directly — do not move back to inline values
+        - name: image.tag
+          value: "0.1.3"
       values: |
         nameOverride: ""
         fullnameOverride: ""
@@ -36,7 +40,6 @@ spec:
         # layered values files (preferred for cascading overrides). Values render as strings.
         envMap:
           PORT: "8080"
-          APP_VERSION: "0.1.3"
 
         # -- list of envFrom sources (e.g. references to existing Secrets/ConfigMaps
         # created out-of-band, such as those produced by the vault-secrets chart)
@@ -58,7 +61,6 @@ spec:
           registry: "bandwidth-docker.jfrog.io"
           repository: es-okta-auth-proxy/es-okta-auth-proxy
           pullPolicy: IfNotPresent
-          tag: "0.1.3"
           # -- Override the image entrypoint (Kubernetes container command)
           command: []
           # -- Arguments supplied to the image entrypoint or image.command
@@ -80,7 +82,7 @@ spec:
           blueGreen:
             activeService: '{{ include "app-chart.fullname" . }}'
             previewService: '{{ include "app-chart.fullname" . }}-preview'
-            autoPromotionEnabled: false
+            autoPromotionEnabled: true
             activeMetadata:
               labels:
                 rollout-role: active
