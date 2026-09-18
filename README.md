@@ -199,7 +199,7 @@ All secrets are stored in Vault under:
 - **Namespace:** `workloads/sandbox/platform`
 - **Engine / path:** `secrets/kv/es-okta-auth-proxy`
 
-Secrets managed there: `OKTA_CLIENT_SECRET`, `OKTA_POST_LOGOUT_URI`, `ES_API_KEY`, `SESSION_SECRET`.
+All app secrets are stored here: `ES_API_KEY`, `ES_ROTATION_CREDS`, `ES_ROTATION_KEY`, `ES_URL`, `KEY_ROTATION_HOURS`, `OKTA_CLIENT_ID`, `OKTA_CLIENT_SECRET`, `OKTA_DOMAIN`, `OKTA_POST_LOGOUT_URI`, `OKTA_REDIRECT_URI`, `PORT`, `SESSION_SECRET`.
 
 ## Production notes
 
