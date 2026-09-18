@@ -12,7 +12,8 @@ import { startRotation } from './rotate.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const dashboardHtml = readFileSync(join(__dirname, 'dashboard.html'));
-const { version } = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8'));
+const { version: pkgVersion } = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8'));
+const version = process.env.APP_VERSION || pkgVersion;
 const architectureHtml = readFileSync(join(__dirname, '..', 'docs', 'architecture.html'));
 
 let ready = false;
