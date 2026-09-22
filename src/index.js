@@ -5,7 +5,7 @@ import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { initOkta, authRouter, requireAuth } from './auth.js';
-import { esProxy, kibanaProxy } from './proxy.js';
+import { esProxy, kibanaProxy, bannerScript } from './proxy.js';
 import { mockEsRouter } from './mock-es.js';
 import { loadGroupMap, resolveServiceKey } from './group-map.js';
 import { startRotation } from './rotate.js';
@@ -72,6 +72,11 @@ app.get('/status', (req, res) => {
 
 // Kibana reverse proxy -- requires Okta auth
 if (process.env.KIBANA_URL) {
+  // Serves user identity to the injected <script src="/kibana-user.js"> tag in Kibana HTML
+  app.get('/kibana-user.js', requireAuth, (req, res) => {
+    res.type('application/javascript');
+    res.send(bannerScript(req.session.user));
+  });
   app.use('/kibana', requireAuth, kibanaProxy());
 }
 
