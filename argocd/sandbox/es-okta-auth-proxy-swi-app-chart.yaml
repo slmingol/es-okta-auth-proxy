@@ -14,7 +14,19 @@ spec:
         fullnameOverride: ""
 
         # -- create configmaps to be mounted into the service
-        config: {}
+        config:
+          group-map.json: |
+            {
+              "_comment": "First matching group in _priority wins. _default used when user has no matching group.",
+              "_priority": ["es-admin", "es-metrics-read", "es-readonly"],
+              "_services": {
+                "1f939d371e095bb5937fa386649a768b2342c542c11c3c3e98d809f04ecbf36a": "T3FWOHhhQUJmZTdYeDBYSlNWZ006N2dDY2Q4REZUaldET2hpT1R1VzZyUQ=="
+              },
+              "es-admin": "T3FWOHhhQUJmZTdYeDBYSlNWZ006N2dDY2Q4REZUaldET2hpT1R1VzZyUQ==",
+              "es-metrics-read": "c0dkOHhhQUJWdFJybTZvM1MzYmU6Y3JTS0piSzNRUXFIelhlU2tTX25SUQ==",
+              "es-readonly": "ZGFWOHhhQUJmZTdYeDBYSlQxamM6VE9KRmlCTzRTc1NoaHpTNWktMnludw==",
+              "_default": "N1NUYWpLQUJfSXNfTkJPdGxpLUU6TEthcm5uel9RclNjQjJiT0tTM1Mzdw=="
+            }
         # these get mounted into a volume at /config
         #   config.yaml:
         #     <config>
@@ -36,6 +48,8 @@ spec:
         # layered values files (preferred for cascading overrides). Values render as strings.
         envMap:
           PORT: "8080"
+          KIBANA_URL: "http://kibana:5601"
+          GROUP_MAP_PATH: "/config/group-map.json"
 
         # -- list of envFrom sources (e.g. references to existing Secrets/ConfigMaps
         # created out-of-band, such as those produced by the vault-secrets chart)

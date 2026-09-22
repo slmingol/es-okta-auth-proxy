@@ -1,0 +1,161 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kibana-sandbox
+spec:
+  project: platform
+  source:
+    chart: 'swi-app-chart'
+    repoURL: 'https://bandwidth.jfrog.io/artifactory/helm'
+    targetRevision: '*-0'
+    helm:
+      values: |
+        fullnameOverride: "kibana"
+
+        config:
+          kibana.yml: |
+            server.host: "0.0.0.0"
+            server.basePath: "/kibana"
+            server.rewriteBasePath: true
+            elasticsearch.hosts: ["http://es-okta-auth-proxy:8080"]
+            elasticsearch.customHeaders:
+              Authorization: "Bearer 1f939d371e095bb5937fa386649a768b2342c542c11c3c3e98d809f04ecbf36a"
+            elasticsearch.sniffOnStart: false
+            elasticsearch.sniffInterval: false
+            elasticsearch.sniffOnConnectionFault: false
+            xpack.security.enabled: false
+
+        # Mount the chart-generated configmap at the path Kibana actually reads
+        volumes:
+          - name: kibana-yml
+            configMap:
+              name: kibana-config
+
+        volumeMounts:
+          - name: kibana-yml
+            mountPath: /usr/share/kibana/config/kibana.yml
+            subPath: kibana.yml
+
+        image:
+          registry: ""
+          repository: docker.elastic.co/kibana/kibana
+          tag: "7.13.4"
+          pullPolicy: IfNotPresent
+          command: []
+          args: []
+
+        imagePullSecrets: []
+
+        envMap: {}
+
+        replicaCount: 1
+
+        deploymentStrategy:
+          type: "blueGreen"
+          blueGreen:
+            activeService: kibana
+            previewService: kibana-preview
+            autoPromotionEnabled: true
+            activeMetadata:
+              labels:
+                rollout-role: active
+            previewMetadata:
+              labels:
+                rollout-role: preview
+          analysis:
+            successfulRunHistoryLimit: 3
+            unsuccessfulRunHistoryLimit: 3
+          rolloutAdditionalSpec:
+            progressDeadlineSeconds: 900
+
+        # Kibana writes temp files -- cannot use readOnly root
+        securityContext:
+          capabilities:
+            drop:
+              - ALL
+          readOnlyRootFilesystem: false
+          runAsNonRoot: false
+
+        service:
+          type: NodePort
+          ports:
+            http:
+              port: 5601
+              protocol: TCP
+
+        # Kibana is accessed through the proxy at /kibana -- no direct ingress
+        ingress:
+          enabled: false
+
+        livenessProbe:
+          httpGet:
+            path: /kibana/api/status
+            port: http
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          failureThreshold: 6
+
+        readinessProbe:
+          httpGet:
+            path: /kibana/api/status
+            port: http
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          failureThreshold: 6
+
+        resources:
+          requests:
+            cpu: 250m
+            memory: 1Gi
+          limits:
+            memory: 2Gi
+
+        dd:
+          env: lab
+          service: ""
+          version: ""
+
+        podAnnotations: {}
+        podLabels:
+          admission.datadoghq.com/enabled: "true"
+
+        podSecurityContext:
+          fsGroup: 1000
+
+        serviceAccount:
+          create: true
+          automount: true
+          annotations: {}
+          name: ""
+
+        topologySpreadConstraints:
+          - maxSkew: 1
+            topologyKey: topology.kubernetes.io/zone
+            whenUnsatisfiable: ScheduleAnyway
+
+        # No Vault secrets needed -- config comes from configmap above
+        vault:
+          address: "https://vault.aws.bandwidth.com:8200"
+          skipTLSVerify: false
+          vaultRole: "221082208920"
+          roleArn: arn:aws:iam::221082208920:role/paas-vault-reader-paas-test-cluster
+          serviceAccount:
+            create: true
+          defaultTransformation:
+            excludeRaw: true
+          secrets: {}
+          artifactory:
+            create: false
+
+        secretStores: {}
+        externalSecrets: {}
+
+  destination:
+    name: 'paas-test-cluster'
+    namespace: 'es-okta-auth-proxy'
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
