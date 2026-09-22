@@ -77,11 +77,11 @@ if (process.env.KIBANA_URL) {
 
 // ES routes -- mock or real proxy, both require auth
 if (MOCK_MODE) {
-  app.use('/_*', requireAuth);
+  app.use('/_*wildcard', requireAuth);
   app.use('/:index/_search', requireAuth);
   mockEsRouter(app);
 } else {
-  app.use('/_*', requireAuth, esProxy());
+  app.use('/_*wildcard', requireAuth, esProxy());
 }
 
 app.listen(PORT, async () => {
