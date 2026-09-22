@@ -21,7 +21,12 @@ export function getClient() {
 
 export function requireAuth(req, res, next) {
   if (req.session?.user) return next();
-  // Store intended destination so we can redirect after login
+  // Service accounts (Kibana, Grafana) send ApiKey directly -- pass through
+  if (req.headers.authorization?.startsWith('ApiKey ')) return next();
+  // API clients get 401; browsers get redirected to Okta
+  if (req.accepts('json') && !req.accepts('html')) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
   req.session.returnTo = req.originalUrl;
   res.redirect('/auth/login');
 }

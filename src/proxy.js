@@ -11,11 +11,14 @@ export function esProxy() {
     on: {
       proxyReq: (proxyReq, req) => {
         startTimes.set(req, Date.now());
-        const groups = req.session?.user?.groups ?? [];
-        const apiKey = resolveApiKey(groups);
 
-        proxyReq.removeHeader('authorization');
-        proxyReq.setHeader('Authorization', `ApiKey ${apiKey}`);
+        // Service accounts supply their own ApiKey -- pass through unchanged
+        if (!req.headers.authorization?.startsWith('ApiKey ')) {
+          const groups = req.session?.user?.groups ?? [];
+          const apiKey = resolveApiKey(groups);
+          proxyReq.removeHeader('authorization');
+          proxyReq.setHeader('Authorization', `ApiKey ${apiKey}`);
+        }
 
         if (req.session?.user?.email) {
           proxyReq.setHeader('X-Forwarded-User', req.session.user.email);
