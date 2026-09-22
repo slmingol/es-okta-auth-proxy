@@ -17,7 +17,7 @@ spec:
             server.host: "0.0.0.0"
             server.basePath: "/kibana"
             server.rewriteBasePath: true
-            elasticsearch.hosts: ["http://es-okta-auth-proxy:8080"]
+            elasticsearch.hosts: ["http://es-okta-auth-proxy-swi-app-chart-sandbox:8080"]
             elasticsearch.customHeaders:
               Authorization: "Bearer 1f939d371e095bb5937fa386649a768b2342c542c11c3c3e98d809f04ecbf36a"
             elasticsearch.sniffOnStart: false
