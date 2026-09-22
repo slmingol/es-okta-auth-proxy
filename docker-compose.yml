@@ -5,6 +5,16 @@ services:
       - "3344:3344"
     env_file:
       - .env
+    environment:
+      KIBANA_URL: "http://kibana:5601"
     volumes:
       - ./config:/app/config
+    restart: unless-stopped
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.13.4
+    volumes:
+      - ./kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+    depends_on:
+      - proxy
     restart: unless-stopped
