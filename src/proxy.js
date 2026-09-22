@@ -5,12 +5,12 @@ export function bannerScript(user) {
   const groups = JSON.stringify((user.groups ?? []).join(', ') || '(none)');
   const email = JSON.stringify(user.email ?? '');
   return `(function(){
-var CSS='#es-proxy-banner{position:fixed;bottom:0;right:0;z-index:999999;background:#1a1a2e;color:#e0e0e0;font:12px/1.4 monospace;padding:4px 10px;border-top-left-radius:6px;border:1px solid #444;border-right:none;border-bottom:none;opacity:.9;pointer-events:none}#es-proxy-banner .g{color:#7ec8e3;font-size:11px}';
+var CSS='#es-proxy-banner{position:fixed;bottom:0;left:0;right:0;z-index:999999;background:#1a1a2e;color:#e0e0e0;font:16px/1.4 monospace;padding:5px 14px;border-top:1px solid #444;display:flex;align-items:center;gap:16px;opacity:.93}#es-proxy-banner .g{color:#7ec8e3}#es-proxy-banner .sep{color:#555}#es-proxy-banner a{color:#f4a261;text-decoration:none;pointer-events:all}#es-proxy-banner a:hover{text-decoration:underline}#es-proxy-banner .spacer{flex:1}';
 function mount(){
   if(document.getElementById('es-proxy-banner'))return;
   var s=document.createElement('style');s.textContent=CSS;document.head.appendChild(s);
   var d=document.createElement('div');d.id='es-proxy-banner';
-  d.innerHTML='<div>'+${email}+'</div><div class="g">'+${groups}+'</div>';
+  d.innerHTML='<span>user: '+${email}+'</span><span class="sep">|</span><span class="g">grp: '+${groups}+'</span><span class="spacer"></span><a href="/auth/logout">Logout</a><span class="sep">|</span><a href="/auth/revoke">Full Logout (Okta)</a>';
   document.body.appendChild(d);
 }
 function observe(){mount();new MutationObserver(mount).observe(document.body,{childList:true,subtree:false});}

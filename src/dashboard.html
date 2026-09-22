@@ -162,6 +162,16 @@
 </div>
 
 <div class="section">
+  <div class="section-title">Tools</div>
+  <div class="grid">
+    <a class="card" href="/kibana">
+      <div class="card-label">Kibana</div>
+      <div class="card-path">/kibana</div>
+    </a>
+  </div>
+</div>
+
+<div class="section">
   <div class="section-title">Auth</div>
   <div class="grid">
     <a class="card" href="#" data-path="/auth/me">
@@ -183,8 +193,9 @@
   </div>
 </div>
 
-<footer style="position:fixed;bottom:0;left:0;right:0;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;font-size:11px;font-family:monospace;border-top:1px solid var(--border,#e0e0e0);background:var(--bg,#fff);color:var(--text-muted,#888);z-index:50;">
+<footer style="position:fixed;bottom:0;left:0;right:0;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;font-size:11px;font-family:monospace;border-top:1px solid var(--border,#e0e0e0);background:var(--bg,#fff);color:var(--muted,#888);z-index:50;">
   <span id="version-label">v&mdash;</span>
+  <span id="footer-user"></span>
   <span>es-okta-auth-proxy</span>
 </footer>
 
@@ -210,6 +221,11 @@
       }
       if (d.version) {
         document.getElementById('version-label').textContent = `v${d.version}`;
+      }
+      const fu = document.getElementById('footer-user');
+      if (d.user) {
+        const grp = (d.user.groups ?? []).join(', ') || '(none)';
+        fu.textContent = `user: ${d.user.email}  |  grp: ${grp}`;
       }
     } catch {}
   }
