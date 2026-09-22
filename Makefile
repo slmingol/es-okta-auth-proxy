@@ -67,7 +67,7 @@ help: ## Show this help
 
 build: ## Build the container image
 	@echo "$(BOLD)$(CYAN)» Building image [$(RUNTIME)]...$(RESET)"
-	@$(COMPOSE) build
+	@$(COMPOSE) build --no-cache
 	@echo "$(GREEN)✓ Build complete$(RESET)"
 
 env-init: .env ## Create .env from env.example (noop if exists)

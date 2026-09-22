@@ -1,34 +1,21 @@
 import { createProxyMiddleware, responseInterceptor } from 'http-proxy-middleware';
 import { resolveApiKey } from './group-map.js';
 
-const BANNER_CSS = `
-#es-proxy-banner {
-  position: fixed;
-  bottom: 0;
-  right: 0;
-  z-index: 999999;
-  background: #1a1a2e;
-  color: #e0e0e0;
-  font: 12px/1.4 monospace;
-  padding: 4px 10px;
-  border-top-left-radius: 6px;
-  border: 1px solid #444;
-  border-right: none;
-  border-bottom: none;
-  opacity: 0.9;
-  pointer-events: none;
+export function bannerScript(user) {
+  const groups = JSON.stringify((user.groups ?? []).join(', ') || '(none)');
+  const email = JSON.stringify(user.email ?? '');
+  return `(function(){
+var CSS='#es-proxy-banner{position:fixed;bottom:0;right:0;z-index:999999;background:#1a1a2e;color:#e0e0e0;font:12px/1.4 monospace;padding:4px 10px;border-top-left-radius:6px;border:1px solid #444;border-right:none;border-bottom:none;opacity:.9;pointer-events:none}#es-proxy-banner .g{color:#7ec8e3;font-size:11px}';
+function mount(){
+  if(document.getElementById('es-proxy-banner'))return;
+  var s=document.createElement('style');s.textContent=CSS;document.head.appendChild(s);
+  var d=document.createElement('div');d.id='es-proxy-banner';
+  d.innerHTML='<div>'+${email}+'</div><div class="g">'+${groups}+'</div>';
+  document.body.appendChild(d);
 }
-#es-proxy-banner .groups { color: #7ec8e3; font-size: 11px; }
-`;
-
-function buildBanner(user) {
-  const groups = (user.groups ?? []).join(', ') || '(none)';
-  return `
-<style>${BANNER_CSS}</style>
-<div id="es-proxy-banner">
-  <div>${user.email}</div>
-  <div class="groups">${groups}</div>
-</div>`;
+function observe(){mount();new MutationObserver(mount).observe(document.body,{childList:true,subtree:false});}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',observe);else observe();
+})();`;
 }
 
 export function kibanaProxy() {
@@ -46,7 +33,7 @@ export function kibanaProxy() {
         const user = req.session?.user;
         if (!user) return buffer;
         const html = buffer.toString('utf8');
-        return html.replace('</body>', buildBanner(user) + '</body>');
+        return html.replace('</head>', '<script src="/kibana-user.js"></script></head>');
       }),
       error: (err, req, res) => {
         console.error('Kibana proxy error:', err.message);

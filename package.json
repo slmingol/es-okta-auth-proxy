@@ -10,7 +10,7 @@
     "dotenv": "^18.0.0",
     "express": "^5.0.0",
     "express-session": "^1.18.0",
-    "http-proxy-middleware": "^4.0.0",
+    "http-proxy-middleware": "^3.0.3",
     "openid-client": "^5.7.1"
   }
 }
