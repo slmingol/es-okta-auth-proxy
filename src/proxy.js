@@ -1,6 +1,22 @@
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { resolveApiKey } from './group-map.js';
 
+export function kibanaProxy() {
+  return createProxyMiddleware({
+    target: process.env.KIBANA_URL,
+    changeOrigin: true,
+    autoRewrite: true,
+    // Express strips /kibana before this middleware sees the path -- put it back
+    pathRewrite: (path) => '/kibana' + (path || '/'),
+    on: {
+      error: (err, req, res) => {
+        console.error('Kibana proxy error:', err.message);
+        res.status(502).json({ error: 'Kibana proxy error', detail: err.message });
+      },
+    },
+  });
+}
+
 export function esProxy() {
   const startTimes = new WeakMap();
 

@@ -5,7 +5,7 @@ import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { initOkta, authRouter, requireAuth } from './auth.js';
-import { esProxy } from './proxy.js';
+import { esProxy, kibanaProxy } from './proxy.js';
 import { mockEsRouter } from './mock-es.js';
 import { loadGroupMap, resolveServiceKey } from './group-map.js';
 import { startRotation } from './rotate.js';
@@ -69,6 +69,11 @@ app.get('/status', (req, res) => {
     mock: MOCK_MODE,
   });
 });
+
+// Kibana reverse proxy -- requires Okta auth
+if (process.env.KIBANA_URL) {
+  app.use('/kibana', requireAuth, kibanaProxy());
+}
 
 // ES routes -- mock or real proxy, both require auth
 if (MOCK_MODE) {
