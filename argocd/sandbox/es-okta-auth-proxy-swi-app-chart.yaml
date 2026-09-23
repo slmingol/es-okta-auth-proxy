@@ -70,7 +70,7 @@ spec:
           # -- Optional registry prefix for image.repository
           registry: "bandwidth-docker.jfrog.io"
           repository: es-okta-auth-proxy/es-okta-auth-proxy
-          tag: "0.1.6"
+          tag: "0.1.7"
           pullPolicy: IfNotPresent
           # -- Override the image entrypoint (Kubernetes container command)
           command: []
