@@ -7,7 +7,7 @@ import { dirname, join } from 'path';
 import { initOkta, authRouter, requireAuth } from './auth.js';
 import { esProxy } from './proxy.js';
 import { mockEsRouter } from './mock-es.js';
-import { loadGroupMap } from './group-map.js';
+import { loadGroupMap, resolveServiceKey } from './group-map.js';
 import { startRotation } from './rotate.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -30,6 +30,17 @@ app.use(session({
 
 // Auth routes (no auth required)
 authRouter(app);
+
+// Service accounts bypass all UI routes -- proxy everything to ES
+const serviceProxy = esProxy();
+app.use((req, res, next) => {
+  const authHeader = req.headers.authorization ?? '';
+  if (!authHeader.startsWith('Bearer ')) return next();
+  const esApiKey = resolveServiceKey(authHeader.slice(7));
+  if (!esApiKey) return next();
+  req.serviceApiKey = esApiKey;
+  return serviceProxy(req, res, next);
+});
 
 // Dashboard UI
 app.get('/', (req, res) => {

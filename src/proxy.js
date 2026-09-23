@@ -11,9 +11,10 @@ export function esProxy() {
     on: {
       proxyReq: (proxyReq, req) => {
         startTimes.set(req, Date.now());
-        const groups = req.session?.user?.groups ?? [];
-        const apiKey = resolveApiKey(groups);
 
+        const groups = req.session?.user?.groups ?? [];
+        // Service account token takes priority over session-resolved key
+        const apiKey = req.serviceApiKey ?? resolveApiKey(groups);
         proxyReq.removeHeader('authorization');
         proxyReq.setHeader('Authorization', `ApiKey ${apiKey}`);
 
@@ -25,6 +26,9 @@ export function esProxy() {
         }
       },
       proxyRes: (proxyRes, req) => {
+        // Kibana's ES client requires this header to accept the response
+        proxyRes.headers['x-elastic-product'] = 'Elasticsearch';
+
         const user = req.session?.user;
         console.log(JSON.stringify({
           ts: new Date().toISOString(),
