@@ -1,5 +1,5 @@
 {
-  "_comment": "Maps Okta group names to ES API keys (base64 encoded id:api_key). First matching group wins. '_default' used when no group matches. '_roles' enables built-in key rotation (requires ES_ROTATION_KEY + KEY_ROTATION_HOURS).",
+  "_comment": "Maps Okta group names to ES API keys (base64 encoded id:api_key). First matching group wins. '_default' used when no group matches. '_roles' enables built-in key rotation (requires ES_ROTATION_CREDS + KEY_ROTATION_HOURS). '_services' maps static bearer tokens to ES API keys for non-browser tools (Kibana, Grafana). '_service_roles' enables auto-rotation of those keys on the same schedule.",
   "_priority": ["es-admin", "es-metrics-write", "es-metrics-read", "es-readonly"],
   "_roles": {
     "es-admin": {
@@ -23,5 +23,13 @@
   "es-metrics-write": "BASE64_APIKEY_FOR_METRICS_WRITE",
   "es-metrics-read": "BASE64_APIKEY_FOR_METRICS_READ",
   "es-readonly": "BASE64_APIKEY_FOR_READONLY",
-  "_default": "BASE64_APIKEY_FALLBACK"
+  "_default": "BASE64_APIKEY_FALLBACK",
+  "_services": {
+    "kibana-bearer-token-replace-me":  "BASE64_APIKEY_FOR_KIBANA",
+    "grafana-bearer-token-replace-me": "BASE64_APIKEY_FOR_GRAFANA"
+  },
+  "_service_roles": {
+    "kibana-bearer-token-replace-me":  { "cluster": ["monitor"], "indices": [{ "names": ["*"], "privileges": ["read", "view_index_metadata"] }] },
+    "grafana-bearer-token-replace-me": { "cluster": ["monitor"], "indices": [{ "names": ["metrics-*"], "privileges": ["read", "view_index_metadata"] }] }
+  }
 }

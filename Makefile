@@ -43,7 +43,7 @@ endif
 
 .DEFAULT_GOAL := help
 
-.PHONY: help build up down logs shell clean restart status env-check env-init
+.PHONY: help build up down logs shell clean restart status env-check env-init check-version
 
 # Auto-create .env from env.example if missing
 .env:
@@ -67,7 +67,7 @@ help: ## Show this help
 
 build: ## Build the container image
 	@echo "$(BOLD)$(CYAN)» Building image [$(RUNTIME)]...$(RESET)"
-	@$(COMPOSE) build
+	@$(COMPOSE) build --no-cache
 	@echo "$(GREEN)✓ Build complete$(RESET)"
 
 env-init: .env ## Create .env from env.example (noop if exists)
@@ -100,6 +100,16 @@ clean: ## Remove containers, image, and volumes
 	@$(COMPOSE) down --rmi local --volumes --remove-orphans 2>/dev/null || \
 	  $(COMPOSE) down --rmi all --volumes 2>/dev/null || true
 	@echo "$(GREEN)✓ Clean$(RESET)"
+
+check-version: ## Verify image.tag and APP_VERSION match in argocd sandbox values
+	@CHART=argocd/sandbox/es-okta-auth-proxy-swi-app-chart.yaml; \
+	IMG=$$(grep 'tag:' $$CHART | grep -v '#' | awk '{print $$2}' | tr -d '"'); \
+	VER=$$(grep 'APP_VERSION:' $$CHART | awk '{print $$2}' | tr -d '"'); \
+	if [ "$$IMG" != "$$VER" ]; then \
+		echo "$(RED)✗ version mismatch: image.tag=$$IMG APP_VERSION=$$VER$(RESET)"; exit 1; \
+	else \
+		echo "$(GREEN)✓ image.tag == APP_VERSION == $$IMG$(RESET)"; \
+	fi
 
 env-check: ## Validate required env vars are set in .env
 	@echo "$(BOLD)$(CYAN)» Checking environment...$(RESET)"
