@@ -546,7 +546,7 @@
         </div>
         <div class="flow-node accent">
           <span class="node-title">auth-proxy</span>
-          <span class="node-sub">:3344</span>
+          <span class="node-sub">:8080 (k8s) / :3344 (local)</span>
         </div>
         <div class="flow-arrow">
           <div class="flow-arrow-line"></div>
@@ -563,6 +563,39 @@
         <div class="flow-node">
           <span class="node-title">Okta</span>
           <span class="node-sub">OIDC / groups</span>
+        </div>
+      </div>
+    </div>
+    <p>The proxy also fronts Kibana: requests to <code>/kibana/*</code> are reverse-proxied to the Kibana pod after Okta auth is enforced. An identity banner showing the authenticated user, their groups, and logout links is injected into every Kibana HTML page via a script tag.</p>
+    <div class="flow">
+      <div class="flow-diagram">
+        <div class="flow-node">
+          <span class="node-title">Browser</span>
+          <span class="node-sub">User / client</span>
+        </div>
+        <div class="flow-arrow">
+          <div class="flow-arrow-line"></div>
+          <span class="flow-arrow-label">OIDC login</span>
+        </div>
+        <div class="flow-node accent">
+          <span class="node-title">auth-proxy</span>
+          <span class="node-sub">/kibana/*</span>
+        </div>
+        <div class="flow-arrow">
+          <div class="flow-arrow-line"></div>
+          <span class="flow-arrow-label">reverse proxy</span>
+        </div>
+        <div class="flow-node">
+          <span class="node-title">Kibana</span>
+          <span class="node-sub">:5601</span>
+        </div>
+        <div class="flow-arrow">
+          <div class="flow-arrow-line"></div>
+          <span class="flow-arrow-label">ApiKey injected</span>
+        </div>
+        <div class="flow-node">
+          <span class="node-title">Elasticsearch</span>
+          <span class="node-sub">ECK / :9200</span>
         </div>
       </div>
     </div>
@@ -613,7 +646,8 @@
           <tr><td>ES_API_KEY</td><td>Base64 encoded <code>id:api_key</code> fallback</td><td><code>aWQ6a2V5...</code></td></tr>
           <tr><td>SESSION_SECRET</td><td>Express session signing key</td><td>random 32+ char string</td></tr>
           <tr><td>PORT</td><td>Proxy listen port (default 3344)</td><td><code>3344</code></td></tr>
-          <tr><td>GROUP_MAP_PATH</td><td>Optional path to group-map.json</td><td><code>./config/group-map.json</code></td></tr>
+          <tr><td>KIBANA_URL</td><td>Internal Kibana URL to reverse proxy (optional)</td><td><code>http://kibana:5601</code></td></tr>
+          <tr><td>GROUP_MAP_PATH</td><td>Path to group-map.json</td><td><code>/config/group-map.json</code></td></tr>
         </tbody>
       </table>
     </div>
@@ -656,11 +690,14 @@ curl http://localhost:3344/status</code></pre>
         <tbody>
           <tr><td>GET /</td><td>No</td><td>Dashboard UI -- shows session state, ES connection</td></tr>
           <tr><td>GET /status</td><td>No</td><td>JSON health check -- user, ES URL, mock flag</td></tr>
+          <tr><td>GET /docs/architecture</td><td>No</td><td>This architecture reference doc</td></tr>
           <tr><td>GET /auth/login</td><td>--</td><td>Initiates Okta OIDC flow</td></tr>
           <tr><td>GET /auth/callback</td><td>--</td><td>Okta redirect target; writes session</td></tr>
           <tr><td>GET /auth/me</td><td>Yes</td><td>Returns current session user + groups as JSON</td></tr>
           <tr><td>GET /auth/logout</td><td>--</td><td>Destroys local session only</td></tr>
           <tr><td>GET /auth/revoke</td><td>--</td><td>Revokes access token + kills Okta SSO session globally</td></tr>
+          <tr><td>GET /kibana-user.js</td><td>Yes</td><td>Serves identity banner script injected into Kibana HTML</td></tr>
+          <tr><td>ANY /kibana/*</td><td>Yes</td><td>Kibana reverse proxy -- enforces Okta auth, injects identity banner</td></tr>
           <tr><td>/_*</td><td>Yes</td><td>All ES API paths -- proxied with API key injected</td></tr>
         </tbody>
       </table>
@@ -687,7 +724,7 @@ curl http://localhost:3344/status</code></pre>
     <p>The <code>_priority</code> array controls tie-breaking for users in multiple groups. A user in both <code>es-admin</code> and <code>es-readonly</code> gets the <code>es-admin</code> key because it appears first.</p>
 
     <div class="callout">
-      <strong>Mount as a Kubernetes secret.</strong> In production, don't commit the real group-map.json. Create a K8s Secret, mount it at <code>/app/config/group-map.json</code>, and point <code>GROUP_MAP_PATH</code> at it. The docker-compose already mounts <code>./config</code> read-only; the same pattern works for K8s volumes.
+      <strong>Mount as a Kubernetes ConfigMap.</strong> In production, don't commit the real group-map.json. Create a K8s ConfigMap (or use Vault via VSO), mount it at <code>/config/group-map.json</code>, and set <code>GROUP_MAP_PATH=/config/group-map.json</code>. The docker-compose mounts <code>./config</code> read-only for local dev; the same pattern works for K8s volumes.
     </div>
 
     <h3>Resolution logic (src/group-map.js)</h3>
@@ -724,7 +761,58 @@ curl http://localhost:3344/status</code></pre>
   </section>
 
   <section>
-    <h2 data-n="06">Expanding RBAC: next steps</h2>
+    <h2 data-n="06">Token and session lifecycle</h2>
+
+    <h3>Okta tokens</h3>
+    <p>On successful login the proxy receives two tokens from Okta, both stored in the Express session:</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Token</th><th>Stored as</th><th>Used for</th><th>Lifetime</th></tr></thead>
+        <tbody>
+          <tr><td>ID token (JWT)</td><td><code>session.idToken</code></td><td><code>id_token_hint</code> on Okta end-session redirect</td><td>Typically 1 hour (Okta default)</td></tr>
+          <tr><td>Access token</td><td><code>session.accessToken</code></td><td>Revocation via <code>/auth/revoke</code></td><td>Typically 1 hour (Okta default)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>The proxy does <strong>not</strong> use a refresh token and does not silently re-authenticate. When the Express session expires the user is simply redirected to Okta for a fresh login. The session lifetime is controlled by the <code>express-session</code> cookie settings (in-memory store by default -- sessions are lost on pod restart).</p>
+    <p>User identity claims (<code>email</code>, <code>name</code>, <code>groups[]</code>) are extracted from the ID token at login and stored in <code>session.user</code>. Group membership is resolved once at login -- mid-session Okta group changes do not take effect until the next login.</p>
+
+    <h3>Logout mechanics</h3>
+    <div class="auth-flow">
+      <div class="auth-step">
+        <span class="step-n">/auth/logout</span>
+        <div class="step-body">Calls <code>req.session.destroy()</code>. Clears the local Express session cookie. The Okta SSO session remains active -- the user can log back in with no prompt if Okta's session is still valid. Use this for "soft" logout.</div>
+      </div>
+      <div class="auth-step">
+        <span class="step-n">/auth/revoke</span>
+        <div class="step-body">Calls <code>oidcClient.revoke(accessToken, 'access_token')</code> to invalidate the access token on Okta's side, destroys the local session, then redirects to Okta's <code>/oauth2/default/v1/logout</code> endpoint with <code>id_token_hint</code>. This terminates the Okta SSO session globally -- the user is fully signed out of all apps sharing the Okta session.</div>
+      </div>
+    </div>
+
+    <h3>ES API key rotation</h3>
+    <p>Separate from Okta tokens, the proxy can rotate its own ES API keys on a schedule. This is configured via <code>KEY_ROTATION_HOURS</code> and requires <code>ES_ROTATION_CREDS</code> (Basic auth, recommended) or <code>ES_ROTATION_KEY</code> (API key with <code>manage_api_key</code> privilege).</p>
+    <p>Rotation sequence per group:</p>
+    <div class="auth-flow">
+      <div class="auth-step">
+        <span class="step-n">1</span>
+        <div class="step-body">Creates a new ES API key via <code>POST /_security/api_key</code> with the role descriptors from <code>_roles</code> in group-map.json.</div>
+      </div>
+      <div class="auth-step">
+        <span class="step-n">2</span>
+        <div class="step-body">Writes the new key to the group-map file and swaps it into memory atomically -- requests never gap between old and new key.</div>
+      </div>
+      <div class="auth-step">
+        <span class="step-n">3</span>
+        <div class="step-body">Invalidates the old key via <code>DELETE /_security/api_key</code>. This step is non-fatal -- if it fails, the old key expires naturally or can be cleaned up manually.</div>
+      </div>
+    </div>
+    <div class="callout">
+      <strong>Basic auth over API key for rotation.</strong> ES derived keys cannot create or invalidate other API keys -- only keys with <code>manage_api_key</code> granted at the user level can. Using <code>ES_ROTATION_CREDS=elastic:password</code> (Basic auth) sidesteps this restriction.
+    </div>
+  </section>
+
+  <section>
+    <h2 data-n="07">Expanding RBAC: next steps</h2>
     <p>The architecture supports a graduated rollout. Start with single-key mode; add tiers only when a concrete requirement surfaces.</p>
 
     <div class="next-steps">
