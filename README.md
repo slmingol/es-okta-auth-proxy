@@ -151,7 +151,7 @@ The bearer token (the service's credential to the proxy) never changes. When `_s
 
 Kibana requires specific configuration to run behind the proxy. Set `KIBANA_URL` in `.env` to enable Kibana proxying (the feature is silently disabled without it).
 
-**`kibana.yml` required settings:**
+**`kibana.yml` required settings** (copy `kibana.yml.example` → `kibana.yml`, then fill in your token):**
 
 ```yaml
 server.basePath: /kibana
