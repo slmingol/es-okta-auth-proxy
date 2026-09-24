@@ -49,3 +49,9 @@ export function resolveApiKey(groups = []) {
 
   return groupMap._default ?? process.env.ES_API_KEY;
 }
+
+// Returns the ES API key for a service bearer token, or null if not found.
+// _services: { "<bearer-token>": "<es-api-key>" }
+export function resolveServiceKey(token) {
+  return groupMap?._services?.[token] ?? null;
+}

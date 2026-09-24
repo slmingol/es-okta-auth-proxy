@@ -1,4 +1,5 @@
 import { Issuer, generators } from 'openid-client';
+import { resolveServiceKey } from './group-map.js';
 
 let oidcClient;
 
@@ -21,7 +22,22 @@ export function getClient() {
 
 export function requireAuth(req, res, next) {
   if (req.session?.user) return next();
-  // Store intended destination so we can redirect after login
+
+  // Service accounts: Bearer token mapped to an ES API key in group-map _services
+  const authHeader = req.headers.authorization ?? '';
+  if (authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    const esApiKey = resolveServiceKey(token);
+    if (esApiKey) {
+      req.serviceApiKey = esApiKey;
+      return next();
+    }
+  }
+
+  // API clients get 401; browsers get redirected to Okta
+  if (req.accepts('json') && !req.accepts('html')) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
   req.session.returnTo = req.originalUrl;
   res.redirect('/auth/login');
 }
@@ -75,8 +91,6 @@ export function authRouter(app) {
   app.get('/auth/revoke', async (req, res) => {
     const idToken = req.session.idToken;
     const accessToken = req.session.accessToken;
-    const port = process.env.PORT || 3344;
-
     // Revoke access token so it can't be reused
     if (accessToken) {
       try {
@@ -91,8 +105,11 @@ export function authRouter(app) {
     // Redirect to Okta end_session to kill the SSO cookie
     const endSession = new URL(`https://${process.env.OKTA_DOMAIN}/oauth2/default/v1/logout`);
     endSession.searchParams.set('client_id', process.env.OKTA_CLIENT_ID);
-    endSession.searchParams.set('post_logout_redirect_uri', `http://localhost:${port}`);
     if (idToken) endSession.searchParams.set('id_token_hint', idToken);
+    // post_logout_redirect_uri must be registered in Okta app Sign-out redirect URIs
+    if (process.env.OKTA_POST_LOGOUT_URI) {
+      endSession.searchParams.set('post_logout_redirect_uri', process.env.OKTA_POST_LOGOUT_URI);
+    }
     res.redirect(endSession.toString());
   });
 
