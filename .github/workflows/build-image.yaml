@@ -1,0 +1,26 @@
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - src/**
+      - Dockerfile
+      - package.json
+      - .github/workflows/build-image.yaml
+  push:
+    branches: [main]
+    paths:
+      - src/**
+      - Dockerfile
+      - package.json
+      - .github/workflows/build-image.yaml
+name: Image Build And Promote
+jobs:
+  build:
+    name: Build
+    uses: Bandwidth/docker-release-workflow/.github/workflows/docker-release-workflow.yml@v2
+    with:
+      registry: "bandwidth-docker.jfrog.io"
+      image-name: "es-okta-auth-proxy"
+      image-context: "."
+      image-namespace: "es-okta-auth-proxy"
