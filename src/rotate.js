@@ -73,6 +73,27 @@ export async function rotateKeys() {
     }
   }
 
+  // rotate _services keys if _service_roles are defined
+  const serviceRoles = map._service_roles;
+  if (serviceRoles && map._services) {
+    for (const [token, currentKey] of Object.entries(map._services)) {
+      if (!serviceRoles[token]) { console.warn(`[rotate] No _service_roles entry for service token -- skipping`); continue; }
+      try {
+        const oldId = Buffer.from(currentKey, 'base64').toString('utf8').split(':')[0];
+        const res = await esRequest('POST', '/_security/api_key', {
+          name: `svc-${new Date().toISOString().slice(0, 10)}`,
+          role_descriptors: { service: serviceRoles[token] },
+        });
+        if (!res.id || !res.api_key) throw new Error(`Unexpected ES response: ${JSON.stringify(res)}`);
+        newMap._services = { ...newMap._services, [token]: Buffer.from(`${res.id}:${res.api_key}`).toString('base64') };
+        oldIds.push(oldId);
+        console.log(`[rotate] service key: new id=${res.id} old id=${oldId}`);
+      } catch (err) {
+        console.error(`[rotate] Failed to rotate service key:`, err.message);
+      }
+    }
+  }
+
   // write + swap in-memory before invalidating so requests never gap
   writeGroupMap(newMap);
   setGroupMap(newMap);
