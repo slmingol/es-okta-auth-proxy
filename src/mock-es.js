@@ -35,7 +35,7 @@ export function mockEsRouter(app) {
   app.all('/:index/_search', mockSearch);
 
   // Catch-all for unmapped ES paths
-  app.all('/_*', (req, res) => {
+  app.all('/_*wildcard', (req, res) => {
     res.json({ acknowledged: true, mock: true, path: req.path, method: req.method });
   });
 }
