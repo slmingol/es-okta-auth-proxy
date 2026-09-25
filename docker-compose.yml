@@ -12,7 +12,7 @@ services:
     restart: unless-stopped
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:7.17.29
+    image: docker.elastic.co/kibana/kibana:9.5.4
     volumes:
       - ./kibana.yml:/usr/share/kibana/config/kibana.yml:ro
     depends_on:
