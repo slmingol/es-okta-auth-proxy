@@ -1,9 +1,9 @@
-FROM node:24.22.1-alpine AS deps
+FROM node:24.22.2-alpine AS deps
 WORKDIR /app
 COPY package.json ./
 RUN npm install --omit=dev
 
-FROM node:24.22.1-alpine AS runtime
+FROM node:24.22.2-alpine AS runtime
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY src ./src
